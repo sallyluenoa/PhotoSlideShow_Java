@@ -33,6 +33,9 @@ public class SlideShowActivity extends AppCompatActivity {
             case R.id.action_settings:
                 Log.d(TAG, "Action Setting!");
                 return true;
+            case R.id.action_sign_out:
+                Log.d(TAG, "Action Sign Out!");
+                return true;
             default:
                 break;
         }

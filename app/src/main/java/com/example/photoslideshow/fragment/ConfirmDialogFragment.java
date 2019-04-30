@@ -25,14 +25,14 @@ public class ConfirmDialogFragment extends DialogFragment {
     private int mId;
     private OnClickListener mListener = null;
 
-    public static ConfirmDialogFragment newInstance(int id, String title, String message, String positive, String negative) {
+    public static ConfirmDialogFragment newInstance(int id, int title, int message, int positive, int negative) {
         ConfirmDialogFragment fragment = new ConfirmDialogFragment();
         Bundle args = new Bundle();
         args.putInt(ARGS_ID, id);
-        args.putString(ARGS_TITLE, title);
-        args.putString(ARGS_MESSAGE, message);
-        args.putString(ARGS_POSITIVE, positive);
-        args.putString(ARGS_NEGATIVE, negative);
+        args.putInt(ARGS_TITLE, title);
+        args.putInt(ARGS_MESSAGE, message);
+        args.putInt(ARGS_POSITIVE, positive);
+        args.putInt(ARGS_NEGATIVE, negative);
         fragment.setArguments(args);
         return fragment;
     }
@@ -41,10 +41,10 @@ public class ConfirmDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Bundle args = getArguments();
         mId = args.getInt(ARGS_ID);
-        String title = args.getString(ARGS_TITLE);
-        String message = args.getString(ARGS_MESSAGE);
-        String positive = args.getString(ARGS_POSITIVE);
-        String negative = args.getString(ARGS_NEGATIVE);
+        int title = args.getInt(ARGS_TITLE);
+        int message = args.getInt(ARGS_MESSAGE);
+        int positive = args.getInt(ARGS_POSITIVE);
+        int negative = args.getInt(ARGS_NEGATIVE);
 
         Activity activity = getActivity();
         if (activity instanceof OnClickListener) {

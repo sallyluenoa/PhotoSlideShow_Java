@@ -132,7 +132,9 @@ public class MainActivity extends AppCompatActivity
     private void showFailedDialog() {
         findViewById(R.id.progress_layout).setVisibility(View.GONE);
 
-        DialogFragment fragment = ConfirmDialogFragment.newInstance(DIALOG_FAILED_SIGN_IN, "title", "message", "yes", "no");
+        DialogFragment fragment = ConfirmDialogFragment.newInstance(DIALOG_FAILED_SIGN_IN,
+                R.string.failed_sign_in_dialog_title, R.string.failed_sign_in_dialog_message,
+                R.string.retry, R.string.close);
         fragment.show(getSupportFragmentManager(), TAG);
     }
 }

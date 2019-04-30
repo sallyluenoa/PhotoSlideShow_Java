@@ -23,13 +23,13 @@ public class AlertDialogFragment extends DialogFragment {
     private int mId;
     private OnClickListener mListener = null;
 
-    public static AlertDialogFragment newInstance(int id, String title, String message, String button) {
+    public static AlertDialogFragment newInstance(int id, int title, int message, int button) {
         AlertDialogFragment fragment = new AlertDialogFragment();
         Bundle args = new Bundle();
         args.putInt(ARGS_ID, id);
-        args.putString(ARGS_TITLE, title);
-        args.putString(ARGS_MESSAGE, message);
-        args.putString(ARGS_BUTTON, button);
+        args.putInt(ARGS_TITLE, title);
+        args.putInt(ARGS_MESSAGE, message);
+        args.putInt(ARGS_BUTTON, button);
         fragment.setArguments(args);
         return fragment;
     }
@@ -38,9 +38,9 @@ public class AlertDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         Bundle args = getArguments();
         mId = args.getInt(ARGS_ID);
-        String title = args.getString(ARGS_TITLE);
-        String message = args.getString(ARGS_MESSAGE);
-        String button = args.getString(ARGS_BUTTON);
+        int title = args.getInt(ARGS_TITLE);
+        int message = args.getInt(ARGS_MESSAGE);
+        int button = args.getInt(ARGS_BUTTON);
 
         Activity activity = getActivity();
         if (activity instanceof OnClickListener) {
