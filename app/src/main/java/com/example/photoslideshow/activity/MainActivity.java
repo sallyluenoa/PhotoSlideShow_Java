@@ -1,5 +1,6 @@
 package com.example.photoslideshow.activity;
 
+import android.accounts.Account;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,6 +13,7 @@ import android.view.View;
 
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ConfirmDialogFragment;
+import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -21,7 +23,8 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
 
 public class MainActivity extends AppCompatActivity
-        implements GoogleApiClient.OnConnectionFailedListener, ConfirmDialogFragment.OnClickListener {
+        implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        ConfirmDialogFragment.OnClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -51,6 +54,7 @@ public class MainActivity extends AppCompatActivity
 
         mGoogleApiClient = new GoogleApiClient
                 .Builder(getApplicationContext())
+                .addConnectionCallbacks(this)
                 .enableAutoManage(this, this)
                 .addScope(scopePhotoReadonly)
                 .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
@@ -63,6 +67,28 @@ public class MainActivity extends AppCompatActivity
                 signIn();
             }
         }, 2000);
+    }
+
+
+    @Override
+    public void onStart() {
+        Log.d(TAG, "onStart()");
+        super.onStart();
+
+        if (!mGoogleApiClient.isConnected()) {
+            Log.d(TAG, "try connect");
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        if (mGoogleApiClient.isConnected()) {
+            Log.d(TAG, "try disconnect");
+            mGoogleApiClient.disconnect();
+        }
     }
 
     @Override
@@ -78,7 +104,8 @@ public class MainActivity extends AppCompatActivity
                     Log.d(TAG, "SignIn succeeded.");
                     GoogleSignInAccount gsia = result.getSignInAccount();
                     Intent slideShowIntent = new Intent(getApplicationContext(), SlideShowActivity.class);
-//                    slideShowIntent.putExtra();
+                    slideShowIntent.putExtra(SlideShowActivity.KEY_NAME, gsia.getDisplayName());
+                    slideShowIntent.putExtra(SlideShowActivity.KEY_EMAIL, gsia.getEmail());
                     startActivity(slideShowIntent);
                     finish();
                 } else {
@@ -89,6 +116,16 @@ public class MainActivity extends AppCompatActivity
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        Log.d(TAG, "onConnected");
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        Log.d(TAG, "onConnectionSuspended");
     }
 
     @Override
