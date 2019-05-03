@@ -1,40 +1,52 @@
 package com.example.photoslideshow.activity;
 
-import android.accounts.Account;
+import android.Manifest;
 import android.content.Intent;
-import android.os.AsyncTask;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.example.photoslideshow.R;
+import com.example.photoslideshow.fragment.ListDialogFragment;
 import com.example.photoslideshow.task.GetTokenAsyncTask;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.api.Auth;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.example.photoslideshow.utils.PhotosApiUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Scope;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SlideShowActivity extends AppCompatActivity
     implements  GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        GetTokenAsyncTask.ICallback {
+        GetTokenAsyncTask.ICallback, ListDialogFragment.OnClickListener {
 
     private static final String TAG = SlideShowActivity.class.getSimpleName();
 
     public static final String KEY_NAME = "name";
     public static final String KEY_EMAIL = "email";
 
+    private static final int DIALOG_SELECT_ALBUM = 1;
+
     private static final String SCOPE_PHOTO_READONLY = "https://www.googleapis.com/auth/photoslibrary.readonly";
     private GoogleApiClient mGoogleApiClient;
 
     private String mAccountName;
     private String mEmail;
+
+    private String mToken = null;
+    private List<PhotosApiUtils.AlbumData> mAlbumList = null;
+    private List<PhotosApiUtils.MediaItemData> mItemList = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,50 +61,8 @@ public class SlideShowActivity extends AppCompatActivity
             mEmail = intent.getStringExtra(KEY_EMAIL);
         }
 
-//        Scope scopePhotoReadonly = new Scope(SCOPE_PHOTO_READONLY);
-//
-//        GoogleSignInOptions gso = new GoogleSignInOptions
-//                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-//                .requestScopes(scopePhotoReadonly)
-//                .requestEmail()
-//                .build();
-//
-//        mGoogleApiClient = new GoogleApiClient
-//                .Builder(getApplicationContext())
-//                .addConnectionCallbacks(this)
-//                .enableAutoManage(this, this)
-//                .addScope(scopePhotoReadonly)
-//                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-//                .build();
-
-        GetTokenAsyncTask task = new GetTokenAsyncTask(getApplicationContext(), mEmail, new String[]{ SCOPE_PHOTO_READONLY }, this);
+        GetTokenAsyncTask task = new GetTokenAsyncTask(getApplicationContext(), mEmail, new String[]{SCOPE_PHOTO_READONLY}, this);
         task.execute();
-    }
-
-    @Override
-    public void onStart() {
-        Log.d(TAG, "onStart()");
-        super.onStart();
-
-//        if (!mGoogleApiClient.isConnected()) {
-//            Log.d(TAG, "try connect");
-//            mGoogleApiClient.connect();
-//        }
-    }
-
-    @Override
-    public void onStop() {
-        Log.d(TAG, "onStop()");
-        super.onStop();
-
-//        if (mGoogleApiClient.isConnected()) {
-//            Log.d(TAG, "isConnected() try disconnect");
-//            mGoogleApiClient.disconnect();
-//        }
-//        if (mGoogleApiClient.isConnecting()) {
-//            Log.d(TAG, "isConnecting() try disconnect");
-//            mGoogleApiClient.disconnect();
-//        }
     }
 
     @Override
@@ -134,10 +104,66 @@ public class SlideShowActivity extends AppCompatActivity
     @Override
     public void succeedAccessToken(String token) {
         Log.d(TAG, "succeedAccessToken");
+        mToken = token;
+        getSharedAlbumList();
     }
 
     @Override
     public void failedAccessToken() {
         Log.d(TAG, "failedAccessToken");
     }
+
+    @Override
+    public void onItemClick(int id, int which) {
+        switch (id) {
+            case DIALOG_SELECT_ALBUM:
+                getMediaItemList(mAlbumList.get(which).id);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void getSharedAlbumList() {
+        if (mToken == null) {
+            Log.w(TAG, "Token must not be null.");
+            return;
+        }
+        findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
+        ((TextView) findViewById(R.id.progress_textView)).setText(R.string.getting_albums_from_google_photo);
+        mAlbumList = PhotosApiUtils.getSharedAlbumList(mToken);
+        findViewById(R.id.progress_layout).setVisibility(View.GONE);
+        showAlbumListDialog();
+    }
+
+    private void showAlbumListDialog() {
+        if (mAlbumList == null) {
+            Log.w(TAG, "Album list must not be null.");
+            return;
+        }
+        ArrayList<String> StrList = new ArrayList<>();
+        for (int i=0; i<mAlbumList.size(); i++) {
+            StrList.add(mAlbumList.get(i).title);
+        }
+        ListDialogFragment fragment = ListDialogFragment.newInstance(DIALOG_SELECT_ALBUM, R.string.select_album_dialog_title, StrList);
+        fragment.show(getSupportFragmentManager(), TAG);
+    }
+
+    private void getMediaItemList(String albumId) {
+        if (mToken == null) {
+            Log.w(TAG, "Token must not be null.");
+            return;
+        }
+        findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
+        ((TextView) findViewById(R.id.progress_textView)).setText(R.string.getting_media_items_from_google_photo);
+        List<PhotosApiUtils.MediaItemData> list = PhotosApiUtils.getMediaItemList(mToken, albumId);
+        findViewById(R.id.progress_layout).setVisibility(View.GONE);
+        Log.d(TAG, "OK!");
+    }
+
+    private void setImageView(Bitmap bitmap) {
+        ImageView imageView = (ImageView) findViewById(R.id.imageView);
+        imageView.setImageBitmap(bitmap);
+    }
+
 }

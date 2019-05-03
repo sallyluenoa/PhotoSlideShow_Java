@@ -13,7 +13,12 @@
     <string name="signing_in">Signing in...</string>
     <string name="retry">Retry</string>
 
+    <string name="getting_albums_from_google_photo">Getting albums from Google Photo...</string>
+    <string name="getting_media_items_from_google_photo">Getting media data from Google Photo...</string>
+
     <string name="failed_sign_in_dialog_title">Failed signing in.</string>
     <string name="failed_sign_in_dialog_message">Retry or close the app.</string>
+
+    <string name="select_album_dialog_title">Select your album.</string>
 
 </resources>

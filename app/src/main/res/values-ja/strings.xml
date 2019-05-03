@@ -13,7 +13,12 @@
     <string name="signing_in">サインイン中です...</string>
     <string name="retry">再試行</string>
 
+    <string name="getting_albums_from_google_photo">Googleフォトからアルバム情報を取得しています...</string>
+    <string name="getting_media_items_from_google_photo">Googleフォトからメディア情報を取得しています...</string>
+
     <string name="failed_sign_in_dialog_title">サインインに失敗しました。</string>
     <string name="failed_sign_in_dialog_message">再試行するかアプリを終了してください。</string>
+
+    <string name="select_album_dialog_title">アルバムを選択してください。</string>
 
 </resources>
