@@ -10,7 +10,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 
+import com.example.photoslideshow.BuildConfig;
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ConfirmDialogFragment;
 import com.google.android.gms.auth.GoogleAuthUtil;
@@ -44,6 +46,9 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        TextView versionView = (TextView) findViewById(R.id.version_text_view);
+        versionView.setText("v" + BuildConfig.VERSION_NAME);
+
         Scope scopePhotoReadonly = new Scope(SCOPE_PHOTO_READONLY);
 
         GoogleSignInOptions gso = new GoogleSignInOptions
@@ -64,6 +69,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run() {
                 findViewById(R.id.title_text_view).setVisibility(View.GONE);
+                findViewById(R.id.version_text_view).setVisibility(View.GONE);
                 signIn();
             }
         }, 2000);
@@ -160,6 +166,7 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "Try sign in.");
 
         findViewById(R.id.title_text_view).setVisibility(View.GONE);
+        findViewById(R.id.version_text_view).setVisibility(View.GONE);
         findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
 
         Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
