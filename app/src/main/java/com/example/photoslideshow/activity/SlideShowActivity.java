@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -15,21 +16,25 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ListDialogFragment;
 import com.example.photoslideshow.task.GetTokenAsyncTask;
+import com.example.photoslideshow.utils.FileUtils;
 import com.example.photoslideshow.utils.PhotosApiUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class SlideShowActivity extends AppCompatActivity
     implements  GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        GetTokenAsyncTask.ICallback, ListDialogFragment.OnClickListener {
+        GetTokenAsyncTask.ICallback, ListDialogFragment.OnClickListener,
+        FileUtils.DownloadCallback {
 
     private static final String TAG = SlideShowActivity.class.getSimpleName();
 
@@ -124,15 +129,31 @@ public class SlideShowActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    public void onSucceedDownload(File filePath) {
+        Log.d(TAG, "onSucceedDownload");
+        Bitmap bitmap = FileUtils.getBitmap(filePath.getPath());
+        setImageView(bitmap);
+    }
+
+    @Override
+    public void onFailedDownload() {
+        Log.d(TAG, "onFailedDownload");
+    }
+
     private void getSharedAlbumList() {
         if (mToken == null) {
             Log.w(TAG, "Token must not be null.");
             return;
         }
-        findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
+        LinearLayout layout = (LinearLayout) findViewById(R.id.progress_layout);
+        layout.setVisibility(View.VISIBLE);
         ((TextView) findViewById(R.id.progress_textView)).setText(R.string.getting_albums_from_google_photo);
+        layout.invalidate();
+
         mAlbumList = PhotosApiUtils.getSharedAlbumList(mToken);
-        findViewById(R.id.progress_layout).setVisibility(View.GONE);
+
+        layout.setVisibility(View.GONE);
         showAlbumListDialog();
     }
 
@@ -156,14 +177,29 @@ public class SlideShowActivity extends AppCompatActivity
         }
         findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
         ((TextView) findViewById(R.id.progress_textView)).setText(R.string.getting_media_items_from_google_photo);
-        List<PhotosApiUtils.MediaItemData> list = PhotosApiUtils.getMediaItemList(mToken, albumId);
+        mItemList = PhotosApiUtils.getMediaItemList(mToken, albumId);
         findViewById(R.id.progress_layout).setVisibility(View.GONE);
-        Log.d(TAG, "OK!");
+
+        downloadFileFromUrl(0);
+    }
+
+    private void downloadFileFromUrl(int index) {
+        if (mItemList == null) {
+            Log.w(TAG, "MediaItem list must not be null.");
+            return;
+        }
+        PhotosApiUtils.MediaItemData item = mItemList.get(index);
+        String dirPath = Environment.getExternalStorageDirectory() + "/" + getString(R.string.dir_name);
+        if (FileUtils.generateDirectory(dirPath)) {
+            String filePath = dirPath + "/" + item.fileName;
+            FileUtils.downloadFileFromUrl(item.baseUrl, filePath, this);
+        } else {
+            Log.w(TAG, "Failed.");
+        }
     }
 
     private void setImageView(Bitmap bitmap) {
         ImageView imageView = (ImageView) findViewById(R.id.imageView);
         imageView.setImageBitmap(bitmap);
     }
-
 }
