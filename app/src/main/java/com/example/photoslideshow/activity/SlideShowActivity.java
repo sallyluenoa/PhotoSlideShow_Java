@@ -24,6 +24,7 @@ import com.example.photoslideshow.fragment.ListDialogFragment;
 import com.example.photoslideshow.task.GetTokenAsyncTask;
 import com.example.photoslideshow.utils.FileUtils;
 import com.example.photoslideshow.utils.PhotosApiUtils;
+import com.example.photoslideshow.utils.PreferenceUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -38,16 +39,12 @@ public class SlideShowActivity extends AppCompatActivity
 
     private static final String TAG = SlideShowActivity.class.getSimpleName();
 
-    public static final String KEY_NAME = "name";
     public static final String KEY_EMAIL = "email";
 
     private static final int DIALOG_SELECT_ALBUM = 1;
 
     private static final String SCOPE_PHOTO_READONLY = "https://www.googleapis.com/auth/photoslibrary.readonly";
     private GoogleApiClient mGoogleApiClient;
-
-    private String mAccountName;
-    private String mEmail;
 
     private String mToken = null;
     private List<PhotosApiUtils.AlbumData> mAlbumList = null;
@@ -60,13 +57,16 @@ public class SlideShowActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        String email = null;
         Intent intent = getIntent();
         if (intent != null) {
-            mAccountName = intent.getStringExtra(KEY_NAME);
-            mEmail = intent.getStringExtra(KEY_EMAIL);
+            email = intent.getStringExtra(KEY_EMAIL);
+        }
+        if (email == null) {
+            email = PreferenceUtils.getEmail(getApplicationContext());
         }
 
-        GetTokenAsyncTask task = new GetTokenAsyncTask(getApplicationContext(), mEmail, new String[]{SCOPE_PHOTO_READONLY}, this);
+        GetTokenAsyncTask task = new GetTokenAsyncTask(getApplicationContext(), email, new String[]{SCOPE_PHOTO_READONLY}, this);
         task.execute();
     }
 
@@ -177,7 +177,9 @@ public class SlideShowActivity extends AppCompatActivity
         }
         findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
         ((TextView) findViewById(R.id.progress_textView)).setText(R.string.getting_media_items_from_google_photo);
-        mItemList = PhotosApiUtils.getMediaItemList(mToken, albumId);
+
+        List<List<PhotosApiUtils.MediaItemData>> lists = PhotosApiUtils.getMediaItemLists(mToken, albumId);
+        mItemList = lists.get(0);
         findViewById(R.id.progress_layout).setVisibility(View.GONE);
 
         downloadFileFromUrl(0);

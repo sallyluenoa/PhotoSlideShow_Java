@@ -44,7 +44,7 @@ public class PhotosApiUtils {
         return null;
     }
 
-    public static List<MediaItemData> getMediaItemList(String token, String albumId) {
+    public static List<List<MediaItemData>> getMediaItemLists(String token, String albumId) {
         try {
             PhotosLibraryClient client = init(token);
             SearchMediaItemsRequest request = SearchMediaItemsRequest.newBuilder()
@@ -72,26 +72,38 @@ public class PhotosApiUtils {
                 prevPage = page;
             }
 
-            List<MediaItemData> list = new ArrayList<>();
+            List<MediaItemData> photoList = new ArrayList<>();
+            List<MediaItemData> videoList = new ArrayList<>();
             if (prevPage != null) {
                 Log.d(TAG, "prevPage.size=" + prevPage.getPageElementCount());
                 for (MediaItem item : prevPage.iterateAll()) {
-                    if (item.hasMediaMetadata() && item.getMediaMetadata().hasPhoto()) {
-                        list.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
+                    if (item.hasMediaMetadata()) {
+                        if (item.getMediaMetadata().hasPhoto()) {
+                            photoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
+                        } else if (item.getMediaMetadata().hasVideo()) {
+                            videoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
+                        }
                     }
                 }
             }
             if (currentPage != null) {
                 Log.d(TAG, "currentPage.size=" + currentPage.getPageElementCount());
                 for (MediaItem item : currentPage.iterateAll()) {
-                    if (item.hasMediaMetadata() && item.getMediaMetadata().hasPhoto()) {
-                        list.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
+                    if (item.hasMediaMetadata()) {
+                        if (item.getMediaMetadata().hasPhoto()) {
+                            photoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
+                        } else if (item.getMediaMetadata().hasVideo()) {
+                            videoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
+                        }
                     }
                 }
             }
             client.close();
-            Log.d(TAG, "MediaItemData list size: " + list.size());
-            return list;
+            Log.d(TAG, String.format("PhotoList size:%d, VideoList size:%d", photoList.size(), videoList.size()));
+            List<List<MediaItemData>> lists = new ArrayList<List<MediaItemData>>(){};
+            lists.add(photoList);
+            lists.add(videoList);
+            return lists;
         } catch (IOException e) {
             e.printStackTrace();
         }

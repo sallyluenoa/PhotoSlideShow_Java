@@ -15,6 +15,7 @@ import android.widget.TextView;
 import com.example.photoslideshow.BuildConfig;
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ConfirmDialogFragment;
+import com.example.photoslideshow.utils.PreferenceUtils;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -68,8 +69,6 @@ public class MainActivity extends AppCompatActivity
         mHandler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                findViewById(R.id.title_text_view).setVisibility(View.GONE);
-                findViewById(R.id.version_text_view).setVisibility(View.GONE);
                 signIn();
             }
         }, 2000);
@@ -109,9 +108,11 @@ public class MainActivity extends AppCompatActivity
                 if (result.isSuccess()) {
                     Log.d(TAG, "SignIn succeeded.");
                     GoogleSignInAccount gsia = result.getSignInAccount();
+                    String accountName = gsia.getDisplayName();
+                    String email = gsia.getEmail();
+                    PreferenceUtils.putAccountInfo(getApplicationContext(), accountName, email);
                     Intent slideShowIntent = new Intent(getApplicationContext(), SlideShowActivity.class);
-                    slideShowIntent.putExtra(SlideShowActivity.KEY_NAME, gsia.getDisplayName());
-                    slideShowIntent.putExtra(SlideShowActivity.KEY_EMAIL, gsia.getEmail());
+                    slideShowIntent.putExtra(SlideShowActivity.KEY_EMAIL, email);
                     startActivity(slideShowIntent);
                     finish();
                 } else {
@@ -163,6 +164,14 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void signIn() {
+        if (PreferenceUtils.hasAccountInfo(getApplicationContext())) {
+            Log.d(TAG, "Already have account info. Skip sign in.");
+            Intent slideShowIntent = new Intent(getApplicationContext(), SlideShowActivity.class);
+            startActivity(slideShowIntent);
+            finish();
+            return;
+        }
+
         Log.d(TAG, "Try sign in.");
 
         findViewById(R.id.title_text_view).setVisibility(View.GONE);
