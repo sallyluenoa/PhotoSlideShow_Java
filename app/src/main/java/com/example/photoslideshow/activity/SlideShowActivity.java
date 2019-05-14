@@ -122,7 +122,7 @@ public class SlideShowActivity extends AppCompatActivity
     public void onItemClick(int id, int which) {
         switch (id) {
             case DIALOG_SELECT_ALBUM:
-                getMediaItemList(mAlbumList.get(which).id);
+                getMediaItemList(mAlbumList.get(which));
                 break;
             default:
                 break;
@@ -170,7 +170,7 @@ public class SlideShowActivity extends AppCompatActivity
         fragment.show(getSupportFragmentManager(), TAG);
     }
 
-    private void getMediaItemList(String albumId) {
+    private void getMediaItemList(PhotosApiUtils.AlbumData album) {
         if (mToken == null) {
             Log.w(TAG, "Token must not be null.");
             return;
@@ -178,11 +178,10 @@ public class SlideShowActivity extends AppCompatActivity
         findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
         ((TextView) findViewById(R.id.progress_textView)).setText(R.string.getting_media_items_from_google_photo);
 
-        List<List<PhotosApiUtils.MediaItemData>> lists = PhotosApiUtils.getMediaItemLists(mToken, albumId);
-        mItemList = lists.get(0);
+        mItemList = PhotosApiUtils.getMediaItemList(mToken, album);
         findViewById(R.id.progress_layout).setVisibility(View.GONE);
 
-        downloadFileFromUrl(0);
+//        downloadFileFromUrl(0);
     }
 
     private void downloadFileFromUrl(int index) {

@@ -18,8 +18,17 @@ public class PreferenceUtils {
     private static final String KEY_ACCOUNT_NAME = "account_name";
     private static final String KEY_EMAIL = "email";
     private static final String KEY_ALBUM_LIST = "album_list";
-    private static final String KEY_PHOTO_LIST = "photo_list";
-    private static final String KEY_VIDEO_LIST = "video_list";
+    private static final String KEY_MEDIA_ITEM_LIST = "media_item_list";
+
+    public static void deleteAll(Context context) {
+        SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.remove(KEY_ACCOUNT_NAME);
+        editor.remove(KEY_EMAIL);
+        editor.remove(KEY_ALBUM_LIST);
+        editor.remove(KEY_MEDIA_ITEM_LIST);
+        editor.commit();
+    }
 
     public static void putAccountInfo(Context context, String accountName, String email) {
         SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
@@ -27,6 +36,13 @@ public class PreferenceUtils {
         editor.putString(KEY_ACCOUNT_NAME, accountName);
         editor.putString(KEY_EMAIL, email);
         editor.commit();
+    }
+
+    public static boolean hasAccountInfo(Context context) {
+        SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
+        String name = pref.getString(KEY_ACCOUNT_NAME, null);
+        String email = pref.getString(KEY_EMAIL, null);
+        return (name != null && email != null);
     }
 
     public static String getAccountName(Context context) {
@@ -37,13 +53,6 @@ public class PreferenceUtils {
     public static String getEmail(Context context) {
         SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
         return pref.getString(KEY_EMAIL, null);
-    }
-
-    public static boolean hasAccountInfo(Context context) {
-        SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
-        String name = pref.getString(KEY_ACCOUNT_NAME, null);
-        String email = pref.getString(KEY_EMAIL, null);
-        return (name != null && email != null);
     }
 
     public static void putAlbumList(Context context, List<PhotosApiUtils.AlbumData> list) {
@@ -65,18 +74,17 @@ public class PreferenceUtils {
         }
     }
 
-    public static void putMediaItemLists(Context context, List<List<PhotosApiUtils.MediaItemData>> lists) {
+    public static void putMediaItemList(Context context, List<PhotosApiUtils.MediaItemData> list) {
         SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         Gson gson = new Gson();
-        editor.putString(KEY_PHOTO_LIST, gson.toJson(lists.get(0)));
-        editor.putString(KEY_VIDEO_LIST, gson.toJson(lists.get(1)));
+        editor.putString(KEY_MEDIA_ITEM_LIST, gson.toJson(list));
         editor.commit();
     }
 
-    public static List<PhotosApiUtils.MediaItemData> getPhotoList(Context context) {
+    public static List<PhotosApiUtils.MediaItemData> getMediaItemList(Context context) {
         SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
-        String json = pref.getString(KEY_PHOTO_LIST, null);
+        String json = pref.getString(KEY_MEDIA_ITEM_LIST, null);
         if (json != null) {
             Gson gson = new Gson();
             return gson.fromJson(json, new TypeToken<List<PhotosApiUtils.MediaItemData>>(){}.getType());
@@ -85,14 +93,4 @@ public class PreferenceUtils {
         }
     }
 
-    public static List<PhotosApiUtils.MediaItemData> getVideoList(Context context) {
-        SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
-        String json = pref.getString(KEY_VIDEO_LIST, null);
-        if (json != null) {
-            Gson gson = new Gson();
-            return gson.fromJson(json, new TypeToken<List<PhotosApiUtils.MediaItemData>>(){}.getType());
-        } else {
-            return null;
-        }
-    }
 }

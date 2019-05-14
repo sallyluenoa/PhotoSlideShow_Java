@@ -16,9 +16,11 @@ import com.google.photos.library.v1.proto.MediaItem;
 import com.google.photos.library.v1.proto.MediaMetadata;
 import com.google.photos.library.v1.proto.MediaTypeFilter;
 import com.google.photos.library.v1.proto.SearchMediaItemsRequest;
+import com.google.protobuf.Timestamp;
 import com.google.type.Date;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -33,7 +35,7 @@ public class PhotosApiUtils {
             InternalPhotosLibraryClient.ListSharedAlbumsPagedResponse response = client.listSharedAlbums();
             List<AlbumData> list = new ArrayList<>();
             for (Album album : response.iterateAll()) {
-                list.add(new AlbumData(album.getId(), album.getTitle()));
+                list.add(new AlbumData(album.getId(), album.getTitle(), album.getProductUrl(), album.getMediaItemsCount()));
             }
             client.close();
             Log.d(TAG, "AlbumData list size: " + list.size());
@@ -44,15 +46,41 @@ public class PhotosApiUtils {
         return null;
     }
 
-    public static List<List<MediaItemData>> getMediaItemLists(String token, String albumId) {
+    public static List<MediaItemData> getMediaItemList(String token, AlbumData album) {
+        Log.d(TAG, "album item count:" + album.mediaItemCount);
+
         try {
             PhotosLibraryClient client = init(token);
             SearchMediaItemsRequest request = SearchMediaItemsRequest.newBuilder()
-                    .setAlbumId(albumId)
+                    .setAlbumId(album.id)
 //                    .setFilters(getFilters())
                     .setPageSize(100)
                     .build();
             InternalPhotosLibraryClient.SearchMediaItemsPagedResponse response = client.searchMediaItems(request);
+
+            int pCount=0, vCount=0, nCount=0;
+            List<MediaItemData> list = new ArrayList<>();
+            for (InternalPhotosLibraryClient.SearchMediaItemsPage page : response.iteratePages()) {
+                Log.d(TAG, "page count:" + page.getPageElementCount());
+                for (MediaItem item : page.iterateAll()) {
+                    if (item.hasMediaMetadata()) {
+                        MediaMetadata metadata = item.getMediaMetadata();
+                        if (metadata.hasPhoto()) {
+                            list.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getProductUrl(), item.getBaseUrl(),
+                                    metadata.getWidth(), metadata.getHeight(), metadata.getCreationTime(), MediaItemData.MediaType.PHOTO));
+                            pCount++;
+                        } else if (metadata.hasVideo()) {
+                            list.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getProductUrl(), item.getBaseUrl(),
+                                    metadata.getWidth(), metadata.getHeight(), metadata.getCreationTime(), MediaItemData.MediaType.VIDEO));
+                            vCount++;
+                        } else {
+                            nCount++;
+                        }
+
+                    }
+                }
+            }
+            Log.d(TAG, String.format("pCount:%d, vCount:%d, nCount:%d", pCount, vCount, nCount));
 
 //            List<MediaItemData> list = new ArrayList<>();
 //            for (InternalPhotosLibraryClient.SearchMediaItemsPage page : response.iteratePages()) {
@@ -61,49 +89,48 @@ public class PhotosApiUtils {
 //                }
 //            }
 
-            InternalPhotosLibraryClient.SearchMediaItemsPage prevPage = null;
-            InternalPhotosLibraryClient.SearchMediaItemsPage currentPage = null;
-            for (InternalPhotosLibraryClient.SearchMediaItemsPage page : response.iteratePages()) {
-                Log.d(TAG, "page: " + page.toString());
-                if (!page.hasNextPage()) {
-                    currentPage = page;
-                    break;
-                }
-                prevPage = page;
-            }
-
-            List<MediaItemData> photoList = new ArrayList<>();
-            List<MediaItemData> videoList = new ArrayList<>();
-            if (prevPage != null) {
-                Log.d(TAG, "prevPage.size=" + prevPage.getPageElementCount());
-                for (MediaItem item : prevPage.iterateAll()) {
-                    if (item.hasMediaMetadata()) {
-                        if (item.getMediaMetadata().hasPhoto()) {
-                            photoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
-                        } else if (item.getMediaMetadata().hasVideo()) {
-                            videoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
-                        }
-                    }
-                }
-            }
-            if (currentPage != null) {
-                Log.d(TAG, "currentPage.size=" + currentPage.getPageElementCount());
-                for (MediaItem item : currentPage.iterateAll()) {
-                    if (item.hasMediaMetadata()) {
-                        if (item.getMediaMetadata().hasPhoto()) {
-                            photoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
-                        } else if (item.getMediaMetadata().hasVideo()) {
-                            videoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl()));
-                        }
-                    }
-                }
-            }
+//            InternalPhotosLibraryClient.SearchMediaItemsPage prevPage = null;
+//            InternalPhotosLibraryClient.SearchMediaItemsPage currentPage = null;
+//            for (InternalPhotosLibraryClient.SearchMediaItemsPage page : response.iteratePages()) {
+//                Log.d(TAG, "page: " + page.toString());
+//                if (!page.hasNextPage()) {
+//                    currentPage = page;
+//                    break;
+//                }
+//                prevPage = page;
+//            }
+//
+//            List<MediaItemData> photoList = new ArrayList<>();
+//            List<MediaItemData> videoList = new ArrayList<>();
+//            if (prevPage != null) {
+//                Log.d(TAG, "prevPage.size=" + prevPage.getPageElementCount());
+//                for (MediaItem item : prevPage.iterateAll()) {
+//                    if (item.hasMediaMetadata()) {
+//                        MediaMetadata metadata = item.getMediaMetadata();
+//                        if (metadata.hasPhoto()) {
+//                            photoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl(), metadata.getCreationTime()));
+//                        } else if (item.getMediaMetadata().hasVideo()) {
+//                            videoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl(), metadata.getCreationTime()));
+//                        }
+//                    }
+//                }
+//            }
+//            if (currentPage != null) {
+//                Log.d(TAG, "currentPage.size=" + currentPage.getPageElementCount());
+//                for (MediaItem item : currentPage.iterateAll()) {
+//                    if (item.hasMediaMetadata()) {
+//                        MediaMetadata metadata = item.getMediaMetadata();
+//                        if (metadata.hasPhoto()) {
+//                            photoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl(), metadata.getCreationTime()));
+//                        } else if (metadata.hasVideo()) {
+//                            videoList.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getBaseUrl(), item.getProductUrl(), metadata.getCreationTime()));
+//                        }
+//                    }
+//                }
+//            }
             client.close();
-            Log.d(TAG, String.format("PhotoList size:%d, VideoList size:%d", photoList.size(), videoList.size()));
-            List<List<MediaItemData>> lists = new ArrayList<List<MediaItemData>>(){};
-            lists.add(photoList);
-            lists.add(videoList);
-            return lists;
+            Log.d(TAG, String.format("List size:%d", list.size()));
+            return list;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -160,27 +187,47 @@ public class PhotosApiUtils {
         return PhotosLibraryClient.initialize(photosLibrarySettings);
     }
 
-    public static class AlbumData {
+    public static class AlbumData implements Serializable {
+
         public final String id;
         public final String title;
+        public final String productUrl;
+        public final long mediaItemCount;
 
-        public AlbumData(String id, String title) {
+        public AlbumData(String id, String title, String productUrl, long mediaItemCount) {
             this.id = id;
             this.title = title;
+            this.productUrl = productUrl;
+            this.mediaItemCount = mediaItemCount;
         }
     }
 
-    public static class MediaItemData {
+    public static class MediaItemData implements Serializable {
+
+        public enum MediaType {
+            PHOTO,
+            VIDEO,
+        }
+
         public final String id;
         public final String fileName;
-        public final String baseUrl;
         public final String productUrl;
+        public final String baseUrl;
+        public final long timeMillis;
+        public final long width;
+        public final long height;
+        public final MediaType mediaType;
 
-        public MediaItemData(String id, String fileName, String baseUrl, String productUrl) {
+        public MediaItemData(String id, String fileName, String productUrl, String baseUrl,
+                             long width, long height, Timestamp timestamp, MediaType mediaType) {
             this.id = id;
             this.fileName = fileName;
-            this.baseUrl = baseUrl;
             this.productUrl = productUrl;
+            this.baseUrl = baseUrl;
+            this.width = width;
+            this.height = height;
+            this.timeMillis = timestamp.getSeconds() * 1000;
+            this.mediaType = mediaType;
         }
     }
 }
