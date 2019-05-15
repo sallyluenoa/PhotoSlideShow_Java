@@ -239,18 +239,19 @@ public class MainActivity extends AppCompatActivity
     private void showPermissionsFailedDialog() {
         DialogFragment fragment = ConfirmDialogFragment.newInstance(DLG_ID_FAILED_PERMISSION,
                 R.string.failed_permissions_dialog_title, R.string.failed_permissions_dialog_message,
-                R.string.retry, R.string.close);
-        fragment.show(getSupportFragmentManager(), TAG);
+                R.string.retry, R.string.close, TAG);
+        fragment.setCancelable(false);
+        fragment.show(getSupportFragmentManager(), ConfirmDialogFragment.TAG);
     }
 
     private void showSignInFailedDialog() {
         findViewById(R.id.progress_layout).setVisibility(View.GONE);
 
-        DialogFragment fragment = ConfirmDialogFragment.newInstance
-                (DLG_ID_FAILED_SIGN_IN,
+        DialogFragment fragment = ConfirmDialogFragment.newInstance(DLG_ID_FAILED_SIGN_IN,
                 R.string.failed_sign_in_dialog_title, R.string.failed_sign_in_dialog_message,
-                R.string.retry, R.string.close);
-        fragment.show(getSupportFragmentManager(), TAG);
+                R.string.retry, R.string.close, TAG);
+        fragment.setCancelable(false);
+        fragment.show(getSupportFragmentManager(), ConfirmDialogFragment.TAG);
     }
 
     private boolean isPermitted(String permission) {

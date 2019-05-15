@@ -41,7 +41,7 @@ public class SlideShowActivity extends AppCompatActivity
 
     public static final String KEY_EMAIL = "email";
 
-    private static final int DIALOG_SELECT_ALBUM = 1;
+    private static final int DLG_ID_SELECT_ALBUM = 1;
 
     private static final String SCOPE_PHOTO_READONLY = "https://www.googleapis.com/auth/photoslibrary.readonly";
     private GoogleApiClient mGoogleApiClient;
@@ -121,7 +121,7 @@ public class SlideShowActivity extends AppCompatActivity
     @Override
     public void onItemClick(int id, int which) {
         switch (id) {
-            case DIALOG_SELECT_ALBUM:
+            case DLG_ID_SELECT_ALBUM:
                 getMediaItemList(mAlbumList.get(which));
                 break;
             default:
@@ -166,8 +166,10 @@ public class SlideShowActivity extends AppCompatActivity
         for (int i=0; i<mAlbumList.size(); i++) {
             StrList.add(mAlbumList.get(i).title);
         }
-        ListDialogFragment fragment = ListDialogFragment.newInstance(DIALOG_SELECT_ALBUM, R.string.select_album_dialog_title, StrList);
-        fragment.show(getSupportFragmentManager(), TAG);
+        ListDialogFragment fragment = ListDialogFragment.newInstance(DLG_ID_SELECT_ALBUM,
+                R.string.select_album_dialog_title, StrList, TAG);
+        fragment.setCancelable(false);
+        fragment.show(getSupportFragmentManager(), ListDialogFragment.TAG);
     }
 
     private void getMediaItemList(PhotosApiUtils.AlbumData album) {
