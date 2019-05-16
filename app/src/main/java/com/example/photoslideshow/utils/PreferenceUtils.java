@@ -3,6 +3,8 @@ package com.example.photoslideshow.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.photoslideshow.serialize.AlbumData;
+import com.example.photoslideshow.serialize.MediaItemData;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -55,7 +57,7 @@ public class PreferenceUtils {
         return pref.getString(KEY_EMAIL, null);
     }
 
-    public static void putAlbumList(Context context, List<PhotosApiUtils.AlbumData> list) {
+    public static void putAlbumList(Context context, List<AlbumData> list) {
         SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         Gson gson = new Gson();
@@ -68,13 +70,13 @@ public class PreferenceUtils {
         String json = pref.getString(KEY_ALBUM_LIST, null);
         if (json != null) {
             Gson gson = new Gson();
-            return gson.fromJson(json, new TypeToken<List<PhotosApiUtils.AlbumData>>(){}.getType());
+            return gson.fromJson(json, new TypeToken<List<AlbumData>>(){}.getType());
         } else {
             return null;
         }
     }
 
-    public static void putMediaItemList(Context context, List<PhotosApiUtils.MediaItemData> list) {
+    public static void putMediaItemList(Context context, List<MediaItemData> list) {
         SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = pref.edit();
         Gson gson = new Gson();
@@ -82,12 +84,12 @@ public class PreferenceUtils {
         editor.commit();
     }
 
-    public static List<PhotosApiUtils.MediaItemData> getMediaItemList(Context context) {
+    public static List<MediaItemData> getMediaItemList(Context context) {
         SharedPreferences pref = context.getSharedPreferences(FILE_NAME, Context.MODE_PRIVATE);
         String json = pref.getString(KEY_MEDIA_ITEM_LIST, null);
         if (json != null) {
             Gson gson = new Gson();
-            return gson.fromJson(json, new TypeToken<List<PhotosApiUtils.MediaItemData>>(){}.getType());
+            return gson.fromJson(json, new TypeToken<List<MediaItemData>>(){}.getType());
         } else {
             return null;
         }

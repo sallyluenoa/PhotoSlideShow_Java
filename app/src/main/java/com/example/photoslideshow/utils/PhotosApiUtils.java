@@ -2,6 +2,8 @@ package com.example.photoslideshow.utils;
 
 import android.util.Log;
 
+import com.example.photoslideshow.serialize.AlbumData;
+import com.example.photoslideshow.serialize.MediaItemData;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.OAuth2Credentials;
@@ -16,11 +18,9 @@ import com.google.photos.library.v1.proto.MediaItem;
 import com.google.photos.library.v1.proto.MediaMetadata;
 import com.google.photos.library.v1.proto.MediaTypeFilter;
 import com.google.photos.library.v1.proto.SearchMediaItemsRequest;
-import com.google.protobuf.Timestamp;
 import com.google.type.Date;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -47,12 +47,12 @@ public class PhotosApiUtils {
     }
 
     public static List<MediaItemData> getMediaItemList(String token, AlbumData album) {
-        Log.d(TAG, "album item count:" + album.mediaItemCount);
+        Log.d(TAG, "album item count:" + album.getMediaItemCount());
 
         try {
             PhotosLibraryClient client = init(token);
             SearchMediaItemsRequest request = SearchMediaItemsRequest.newBuilder()
-                    .setAlbumId(album.id)
+                    .setAlbumId(album.getId())
 //                    .setFilters(getFilters())
                     .setPageSize(100)
                     .build();
@@ -185,49 +185,5 @@ public class PhotosApiUtils {
                         .build();
 
         return PhotosLibraryClient.initialize(photosLibrarySettings);
-    }
-
-    public static class AlbumData implements Serializable {
-
-        public final String id;
-        public final String title;
-        public final String productUrl;
-        public final long mediaItemCount;
-
-        public AlbumData(String id, String title, String productUrl, long mediaItemCount) {
-            this.id = id;
-            this.title = title;
-            this.productUrl = productUrl;
-            this.mediaItemCount = mediaItemCount;
-        }
-    }
-
-    public static class MediaItemData implements Serializable {
-
-        public enum MediaType {
-            PHOTO,
-            VIDEO,
-        }
-
-        public final String id;
-        public final String fileName;
-        public final String productUrl;
-        public final String baseUrl;
-        public final long timeMillis;
-        public final long width;
-        public final long height;
-        public final MediaType mediaType;
-
-        public MediaItemData(String id, String fileName, String productUrl, String baseUrl,
-                             long width, long height, Timestamp timestamp, MediaType mediaType) {
-            this.id = id;
-            this.fileName = fileName;
-            this.productUrl = productUrl;
-            this.baseUrl = baseUrl;
-            this.width = width;
-            this.height = height;
-            this.timeMillis = timestamp.getSeconds() * 1000;
-            this.mediaType = mediaType;
-        }
     }
 }

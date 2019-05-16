@@ -21,6 +21,8 @@ import android.widget.TextView;
 
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ListDialogFragment;
+import com.example.photoslideshow.serialize.AlbumData;
+import com.example.photoslideshow.serialize.MediaItemData;
 import com.example.photoslideshow.task.GetTokenAsyncTask;
 import com.example.photoslideshow.utils.FileUtils;
 import com.example.photoslideshow.utils.PhotosApiUtils;
@@ -47,8 +49,8 @@ public class SlideShowActivity extends AppCompatActivity
     private GoogleApiClient mGoogleApiClient;
 
     private String mToken = null;
-    private List<PhotosApiUtils.AlbumData> mAlbumList = null;
-    private List<PhotosApiUtils.MediaItemData> mItemList = null;
+    private List<AlbumData> mAlbumList = null;
+    private List<MediaItemData> mItemList = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -164,7 +166,7 @@ public class SlideShowActivity extends AppCompatActivity
         }
         ArrayList<String> StrList = new ArrayList<>();
         for (int i=0; i<mAlbumList.size(); i++) {
-            StrList.add(mAlbumList.get(i).title);
+            StrList.add(mAlbumList.get(i).getTitle());
         }
         ListDialogFragment fragment = ListDialogFragment.newInstance(DLG_ID_SELECT_ALBUM,
                 R.string.select_album_dialog_title, StrList, TAG);
@@ -172,7 +174,7 @@ public class SlideShowActivity extends AppCompatActivity
         fragment.show(getSupportFragmentManager(), ListDialogFragment.TAG);
     }
 
-    private void getMediaItemList(PhotosApiUtils.AlbumData album) {
+    private void getMediaItemList(AlbumData album) {
         if (mToken == null) {
             Log.w(TAG, "Token must not be null.");
             return;
@@ -191,11 +193,11 @@ public class SlideShowActivity extends AppCompatActivity
             Log.w(TAG, "MediaItem list must not be null.");
             return;
         }
-        PhotosApiUtils.MediaItemData item = mItemList.get(index);
+        MediaItemData item = mItemList.get(index);
         String dirPath = Environment.getExternalStorageDirectory() + "/" + getString(R.string.dir_name);
         if (FileUtils.generateDirectory(dirPath)) {
-            String filePath = dirPath + "/" + item.fileName;
-            FileUtils.downloadFileFromUrl(item.baseUrl, filePath, this);
+            String filePath = dirPath + "/" + item.getFileName();
+            FileUtils.downloadFileFromUrl(item.getBaseUrl(), filePath, this);
         } else {
             Log.w(TAG, "Failed.");
         }
