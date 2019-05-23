@@ -1,7 +1,6 @@
 package com.example.photoslideshow.activity;
 
 import android.Manifest;
-import android.accounts.Account;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -20,15 +19,11 @@ import android.widget.TextView;
 import com.example.photoslideshow.BuildConfig;
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ConfirmDialogFragment;
+import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
-import com.google.android.gms.auth.GoogleAuthUtil;
-import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.Scope;
 
 public class MainActivity extends AppCompatActivity
         implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
@@ -36,17 +31,13 @@ public class MainActivity extends AppCompatActivity
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private static final String SCOPE_PHOTO_READONLY = "https://www.googleapis.com/auth/photoslibrary.readonly";
-
     private static final int ACV_REQ_CODE_SIGN_IN = 1;
     private static final int ACV_REQ_CODE_PERMISSION = 2;
 
     private static final int DLG_ID_FAILED_SIGN_IN = 1;
     private static final int DLG_ID_FAILED_PERMISSION = 2;
 
-    private GoogleApiClient mGoogleApiClient;
-
-    final Handler mHandler = new Handler();
+    private GoogleApiClient mGoogleApiClient = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,49 +49,12 @@ public class MainActivity extends AppCompatActivity
         TextView versionView = (TextView) findViewById(R.id.version_text_view);
         versionView.setText("v" + BuildConfig.VERSION_NAME);
 
-        Scope scopePhotoReadonly = new Scope(SCOPE_PHOTO_READONLY);
-
-        GoogleSignInOptions gso = new GoogleSignInOptions
-                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestScopes(scopePhotoReadonly)
-                .requestEmail()
-                .build();
-
-        mGoogleApiClient = new GoogleApiClient
-                .Builder(getApplicationContext())
-                .addConnectionCallbacks(this)
-                .enableAutoManage(this, this)
-                .addScope(scopePhotoReadonly)
-                .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
-                .build();
-
-        mHandler.postDelayed(new Runnable() {
+        new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
                 givePermissions();
             }
         }, 2000);
-    }
-
-    @Override
-    public void onStart() {
-        Log.d(TAG, "onStart()");
-        super.onStart();
-
-        if (!mGoogleApiClient.isConnected()) {
-            Log.d(TAG, "try connect");
-            mGoogleApiClient.connect();
-        }
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        if (mGoogleApiClient.isConnected()) {
-            Log.d(TAG, "try disconnect");
-            mGoogleApiClient.disconnect();
-        }
     }
 
     @Override
@@ -110,13 +64,11 @@ public class MainActivity extends AppCompatActivity
 
         switch (requestCode) {
             case ACV_REQ_CODE_SIGN_IN:
-                GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-
-                if (result.isSuccess()) {
+                GoogleSignInAccount signInAccount = GoogleApiUtils.getSignInAccountFromResultIntent(data);
+                if (signInAccount != null) {
                     Log.d(TAG, "SignIn succeeded.");
-                    GoogleSignInAccount gsia = result.getSignInAccount();
-                    String accountName = gsia.getDisplayName();
-                    String email = gsia.getEmail();
+                    String accountName = signInAccount.getDisplayName();
+                    String email = signInAccount.getEmail();
                     PreferenceUtils.putAccountInfo(getApplicationContext(), accountName, email);
                     Intent slideShowIntent = new Intent(getApplicationContext(), SlideShowActivity.class);
                     slideShowIntent.putExtra(SlideShowActivity.KEY_EMAIL, email);
@@ -232,8 +184,11 @@ public class MainActivity extends AppCompatActivity
         findViewById(R.id.version_text_view).setVisibility(View.GONE);
         findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
 
-        Intent signInIntent = Auth.GoogleSignInApi.getSignInIntent(mGoogleApiClient);
-        startActivityForResult(signInIntent, ACV_REQ_CODE_SIGN_IN);
+        if (mGoogleApiClient == null) {
+            String[] scopes = { GoogleApiUtils.SCOPE_PHOTO_READONLY };
+            mGoogleApiClient = GoogleApiUtils.initSignInApiClient(this, this, this, scopes);
+        }
+        GoogleApiUtils.startSignInActivity(this, mGoogleApiClient, ACV_REQ_CODE_SIGN_IN);
     }
 
     private void showPermissionsFailedDialog() {
