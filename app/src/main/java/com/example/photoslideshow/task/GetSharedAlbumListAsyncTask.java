@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.example.photoslideshow.list.AlbumList;
 import com.example.photoslideshow.serialize.AlbumData;
-import com.example.photoslideshow.utils.PhotosApiUtils;
+import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.internal.InternalPhotosLibraryClient;
 import com.google.photos.library.v1.proto.Album;
@@ -36,9 +36,10 @@ public class GetSharedAlbumListAsyncTask extends AsyncTask<Void, Void, AlbumList
 
     @Override
     protected AlbumList doInBackground(Void... voids) {
+        Log.d(TAG, "Try to get Album list.");
         PhotosLibraryClient client = null;
         try {
-            client = PhotosApiUtils.init(mToken);
+            client = GoogleApiUtils.initPhotosLibraryClient(mToken);
             InternalPhotosLibraryClient.ListSharedAlbumsPagedResponse response = client.listSharedAlbums();
             AlbumList list = new AlbumList();
             for (Album album : response.iterateAll()) {

@@ -6,7 +6,7 @@ import android.util.Log;
 import com.example.photoslideshow.list.MediaItemList;
 import com.example.photoslideshow.serialize.AlbumData;
 import com.example.photoslideshow.serialize.MediaItemData;
-import com.example.photoslideshow.utils.PhotosApiUtils;
+import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.internal.InternalPhotosLibraryClient;
 import com.google.photos.library.v1.proto.MediaItem;
@@ -41,9 +41,10 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
 
     @Override
     protected MediaItemList doInBackground(Void... voids) {
+        Log.d(TAG, "Try to get MediaItem list.");
         PhotosLibraryClient client = null;
         try {
-            client = PhotosApiUtils.init(mToken);
+            client = GoogleApiUtils.initPhotosLibraryClient(mToken);
             SearchMediaItemsRequest request = SearchMediaItemsRequest.newBuilder()
                     .setAlbumId(mAlbum.getId())
                     .setPageSize(100)

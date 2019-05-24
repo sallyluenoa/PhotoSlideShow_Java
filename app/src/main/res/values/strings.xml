@@ -14,6 +14,7 @@
     <string name="signing_in">Signing in...</string>
     <string name="retry">Retry</string>
 
+    <string name="getting_access_token_from_google_api">Getting info from Google account...</string>
     <string name="getting_albums_from_google_photo">Getting albums from Google Photo...</string>
     <string name="getting_media_items_from_google_photo">Getting media data from Google Photo...</string>
 

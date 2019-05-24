@@ -43,7 +43,7 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected Boolean doInBackground(Void... params) {
-        Log.d(TAG, "doInBackground");
+        Log.d(TAG, "Try to download file.");
 
         HttpURLConnection con = null;
         InputStream inputStream = null;
@@ -114,6 +114,7 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected void onPostExecute(Boolean result) {
+        Log.d(TAG, "Download result: " + result);
         if (mCallback != null) {
             mCallback.onDownloadFileResult(result ? mOutputFile : null);
         }

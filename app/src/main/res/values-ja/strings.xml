@@ -13,6 +13,7 @@
     <string name="signing_in">サインイン中です...</string>
     <string name="retry">再試行</string>
 
+    <string name="getting_access_token_from_google_api">Googleアカウントから必要な情報を取得しています...</string>
     <string name="getting_albums_from_google_photo">Googleフォトからアルバム情報を取得しています...</string>
     <string name="getting_media_items_from_google_photo">Googleフォトからメディア情報を取得しています...</string>
 

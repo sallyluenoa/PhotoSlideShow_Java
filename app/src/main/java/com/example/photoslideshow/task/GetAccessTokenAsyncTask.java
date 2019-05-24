@@ -3,6 +3,7 @@ package com.example.photoslideshow.task;
 import android.accounts.Account;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.google.android.gms.auth.GoogleAuthUtil;
 
@@ -42,6 +43,7 @@ public class GetAccessTokenAsyncTask extends AsyncTask<Void, Void, String> {
 
     @Override
     protected String doInBackground(Void... params) {
+        Log.d(TAG, "Try to get access token.");
         try {
             return GoogleAuthUtil.getToken(mContext, new Account(mEmail, GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE), mScopes);
         } catch (Exception e) {
@@ -56,6 +58,7 @@ public class GetAccessTokenAsyncTask extends AsyncTask<Void, Void, String> {
 
     @Override
     protected void onPostExecute(String token) {
+        Log.d(TAG, "Result of getting access token: " + (token != null ? token : "NULL"));
         if (mCallback != null) {
             mCallback.onAccessTokenResult(token);
         }

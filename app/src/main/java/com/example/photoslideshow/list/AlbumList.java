@@ -13,4 +13,18 @@ public class AlbumList extends ArrayList<AlbumData> {
         return null;
     }
 
+    public AlbumData findFromTitle(String title) {
+        for (AlbumData data : this) {
+            if (data.getTitle().equals(title)) return data;
+        }
+        return null;
+    }
+
+    public ArrayList<String> getTitleList() {
+        ArrayList<String> titles = new ArrayList<>();
+        for (AlbumData data : this) {
+            titles.add(data.getTitle());
+        }
+        return titles;
+    }
 }

@@ -10,6 +10,14 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Scope;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.AccessToken;
+import com.google.auth.oauth2.OAuth2Credentials;
+import com.google.photos.library.v1.PhotosLibraryClient;
+import com.google.photos.library.v1.PhotosLibrarySettings;
+
+import java.io.IOException;
 
 public class GoogleApiUtils {
 
@@ -43,6 +51,21 @@ public class GoogleApiUtils {
             if (i < scpStrs.length-1) str += " ";
         }
         return new Scope(str);
+    }
+
+    public static PhotosLibraryClient initPhotosLibraryClient(@NonNull String token) throws IOException {
+        return PhotosLibraryClient.initialize(getPhotosLibrarySettings(token));
+    }
+
+    public static PhotosLibrarySettings getPhotosLibrarySettings(@NonNull String token) throws IOException {
+        return PhotosLibrarySettings
+                .newBuilder()
+                .setCredentialsProvider(FixedCredentialsProvider.create(getOAuth2Credentials(token)))
+                .build();
+    }
+
+    public static Credentials getOAuth2Credentials(@NonNull String token) {
+        return OAuth2Credentials.create(new AccessToken(token, null));
     }
 
     public static void startSignInActivity(@NonNull FragmentActivity activity,
