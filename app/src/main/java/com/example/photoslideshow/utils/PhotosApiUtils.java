@@ -176,7 +176,7 @@ public class PhotosApiUtils {
                 .build();
     }
 
-    private static PhotosLibraryClient init(String token) throws IOException {
+    public static PhotosLibraryClient init(String token) throws IOException {
         OAuth2Credentials credentials = OAuth2Credentials.create(new AccessToken(token, null));
 
         PhotosLibrarySettings photosLibrarySettings =
