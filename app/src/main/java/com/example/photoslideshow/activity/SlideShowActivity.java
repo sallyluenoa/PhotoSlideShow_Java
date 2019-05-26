@@ -3,7 +3,6 @@ package com.example.photoslideshow.activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -17,20 +16,16 @@ import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ListDialogFragment;
 import com.example.photoslideshow.list.AlbumList;
 import com.example.photoslideshow.list.MediaItemList;
-import com.example.photoslideshow.serialize.MediaItemData;
+import com.example.photoslideshow.manager.DownloadFilesManager;
 import com.example.photoslideshow.task.GetAccessTokenAsyncTask;
 import com.example.photoslideshow.task.GetMediaItemListAsyncTask;
 import com.example.photoslideshow.task.GetSharedAlbumListAsyncTask;
-import com.example.photoslideshow.utils.FileUtils;
 import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
 
-import java.io.File;
-
 public class SlideShowActivity extends AppCompatActivity
     implements  ListDialogFragment.OnClickListener,
-        GetAccessTokenAsyncTask.ICallback, GetSharedAlbumListAsyncTask.ICallback, GetMediaItemListAsyncTask.ICallback,
-        FileUtils.DownloadCallback {
+        GetAccessTokenAsyncTask.ICallback, GetSharedAlbumListAsyncTask.ICallback, GetMediaItemListAsyncTask.ICallback {
 
     private static final String TAG = SlideShowActivity.class.getSimpleName();
 
@@ -41,6 +36,10 @@ public class SlideShowActivity extends AppCompatActivity
     private String mToken = null;
     private AlbumList mAlbumList = null;
     private MediaItemList mMediaItemList = null;
+
+    private DownloadFilesManager mDownloadFilesManager = null;
+
+    private int mSelectedAlbumIndex = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,8 +81,8 @@ public class SlideShowActivity extends AppCompatActivity
     public void onItemClick(int id, int which) {
         switch (id) {
             case DLG_ID_SELECT_ALBUM:
-                String title = mAlbumList.getTitleList().get(which);
-                startGetMediaItemList(title);
+                mSelectedAlbumIndex = which;
+                startGetMediaItemList();
                 break;
             default:
                 break;
@@ -116,21 +115,10 @@ public class SlideShowActivity extends AppCompatActivity
     public void onMediaItemListResult(MediaItemList list) {
         if (list != null) {
             Log.d(TAG, "Succeeded to get MediaItem list.");
+            startDownloadFiles();
         } else {
             Log.d(TAG, "Failed to get MediaItem list.");
         }
-    }
-
-    @Override
-    public void onSucceedDownload(File filePath) {
-        Log.d(TAG, "onSucceedDownload");
-        Bitmap bitmap = FileUtils.getBitmap(filePath.getPath());
-        setImageView(bitmap);
-    }
-
-    @Override
-    public void onFailedDownload() {
-        Log.d(TAG, "onFailedDownload");
     }
 
     private void startGetAccessToken(String email) {
@@ -142,28 +130,26 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     private void startGetSharedAlbumList() {
-        if (mToken == null) {
-            Log.d(TAG, "Access token is null. Try to get it again.");
-            startGetAccessToken(null);
-            return;
-        }
+        if (isNullAccessToken()) return;
+
         showProgress(R.string.getting_albums_from_google_photo);
         GetSharedAlbumListAsyncTask.start(mToken, this);
     }
 
-    private void startGetMediaItemList(String title) {
-        if (mToken == null) {
-            Log.d(TAG, "Access token is null. Try to get it again.");
-            startGetAccessToken(null);
-            return;
-        }
-        if (mAlbumList == null) {
-            Log.d(TAG, "Album list is null. Try to get it again.");
-            startGetSharedAlbumList();
-            return;
-        }
+    private void startGetMediaItemList() {
+        if (isNullAccessToken()) return;
+        if (isNullAlbumList()) return;
+        if (isNotSelectedAlbumIndex()) return;
+
         showProgress(R.string.getting_media_items_from_google_photo);
-        GetMediaItemListAsyncTask.start(mToken, mAlbumList.findFromTitle(title), this);
+        GetMediaItemListAsyncTask.start(mToken, mAlbumList.get(mSelectedAlbumIndex), this);
+    }
+
+    private void startDownloadFiles() {
+        if (isNullMediaItemList()) return;
+
+        mDownloadFilesManager = new DownloadFilesManager(getApplicationContext(), mMediaItemList);
+        mDownloadFilesManager.start();
     }
 
     private void showAlbumListDialog() {
@@ -179,21 +165,6 @@ public class SlideShowActivity extends AppCompatActivity
         fragment.show(getSupportFragmentManager(), ListDialogFragment.TAG);
     }
 
-    private void downloadFileFromUrl(int index) {
-        if (mMediaItemList == null) {
-            Log.w(TAG, "MediaItem list must not be null.");
-            return;
-        }
-        MediaItemData item = mMediaItemList.get(index);
-        String dirPath = Environment.getExternalStorageDirectory() + "/" + getString(R.string.dir_name);
-        if (FileUtils.generateDirectory(dirPath)) {
-            String filePath = dirPath + "/" + item.getFileName();
-            FileUtils.downloadFileFromUrl(item.getBaseUrl(), filePath, this);
-        } else {
-            Log.w(TAG, "Failed.");
-        }
-    }
-
     private void setImageView(Bitmap bitmap) {
         ImageView imageView = (ImageView) findViewById(R.id.imageView);
         imageView.setImageBitmap(bitmap);
@@ -206,6 +177,42 @@ public class SlideShowActivity extends AppCompatActivity
 
     private void hideProgress() {
         findViewById(R.id.progress_layout).setVisibility(View.GONE);
+    }
+
+    private boolean isNullAccessToken() {
+        if (mToken == null) {
+            Log.d(TAG, "Access token is null. Try to get it again.");
+            startGetAccessToken(null);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isNullAlbumList() {
+        if (mAlbumList == null) {
+            Log.d(TAG, "Album list is null. Try to get it again.");
+            startGetSharedAlbumList();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isNullMediaItemList() {
+        if (mMediaItemList == null) {
+            Log.d(TAG, "MediaItem list is null. Try to get it again.");
+            startGetMediaItemList();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isNotSelectedAlbumIndex() {
+        if (mSelectedAlbumIndex < 0) {
+            Log.d(TAG, "Album is not selected. Show album list dialog.");
+            showAlbumListDialog();
+            return true;
+        }
+        return false;
     }
 
 }
