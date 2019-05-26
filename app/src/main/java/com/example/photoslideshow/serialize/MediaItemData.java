@@ -7,8 +7,20 @@ import java.io.Serializable;
 public class MediaItemData implements Serializable {
 
     public enum MediaType {
-        PHOTO,
-        VIDEO,
+        PHOTO("photo"),
+        VIDEO("video"),
+        ;
+
+        private final String text;
+
+        private MediaType(final String text) {
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return this.text;
+        }
     }
 
     private final String id;
