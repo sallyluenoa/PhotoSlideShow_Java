@@ -1,12 +1,15 @@
 package com.example.photoslideshow.task;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.example.photoslideshow.list.AlbumList;
 import com.example.photoslideshow.list.MediaItemList;
 import com.example.photoslideshow.serialize.AlbumData;
 import com.example.photoslideshow.serialize.MediaItemData;
 import com.example.photoslideshow.utils.GoogleApiUtils;
+import com.example.photoslideshow.utils.PreferenceUtils;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.internal.InternalPhotosLibraryClient;
 import com.google.photos.library.v1.proto.MediaItem;
@@ -23,58 +26,71 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
 
     private static final String TAG = GetMediaItemListAsyncTask.class.getSimpleName();
 
+    private final Context mContext;
     private final String mToken;
-    private final AlbumData mAlbum;
+    private final String mSelectedAlbumId;
+    private final AlbumList mAlbumList;
     private final ICallback mCallback;
 
-    public static void start(String token, AlbumData album, ICallback callback) {
-        GetMediaItemListAsyncTask task = new GetMediaItemListAsyncTask(token, album, callback);
+    public static void start(Context context, String token, String selectedAlbumId,
+                             AlbumList albumList, ICallback callback) {
+        GetMediaItemListAsyncTask task = new GetMediaItemListAsyncTask(context, token, selectedAlbumId, albumList, callback);
         task.execute();
     }
 
-    private GetMediaItemListAsyncTask(String token, AlbumData album, ICallback callback) {
+    private GetMediaItemListAsyncTask(Context context, String token, String selectedAlbumId,
+                                      AlbumList albumList, ICallback callback) {
         super();
+        mContext = context;
         mToken = token;
-        mAlbum = album;
+        mSelectedAlbumId = selectedAlbumId;
+        mAlbumList = albumList;
         mCallback = callback;
     }
 
     @Override
     protected MediaItemList doInBackground(Void... voids) {
+        final AlbumData album = mAlbumList.findFromId(mSelectedAlbumId);
+        final long oldMediaItemCount = getOldMediaItemCount(mContext, album);
+        if (album.getMediaItemCount() <= oldMediaItemCount) {
+            Log.d(TAG, "No need to update MediaItem list.");
+            return null;
+        }
+
         Log.d(TAG, "Try to get MediaItem list.");
         PhotosLibraryClient client = null;
         try {
             client = GoogleApiUtils.initPhotosLibraryClient(mToken);
             SearchMediaItemsRequest request = SearchMediaItemsRequest.newBuilder()
-                    .setAlbumId(mAlbum.getId())
+                    .setAlbumId(album.getId())
                     .setPageSize(100)
                     .build();
             InternalPhotosLibraryClient.SearchMediaItemsPagedResponse response = client.searchMediaItems(request);
 
-            int pCount=0, vCount=0, nCount=0;
-            MediaItemList list = new MediaItemList();
+            long indexMediaItemCount = 0;
+            MediaItemList list = PreferenceUtils.getAllMediaItemList(mContext);
+            if (list == null) list = new MediaItemList();
+
             for (InternalPhotosLibraryClient.SearchMediaItemsPage page : response.iteratePages()) {
                 Log.d(TAG, "page count:" + page.getPageElementCount());
-                for (MediaItem item : page.iterateAll()) {
-                    if (item.hasMediaMetadata()) {
-                        MediaMetadata metadata = item.getMediaMetadata();
-                        if (metadata.hasPhoto()) {
-                            list.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getProductUrl(), item.getBaseUrl(),
-                                    metadata.getWidth(), metadata.getHeight(), metadata.getCreationTime(), MediaItemData.MediaType.PHOTO));
-                            pCount++;
-                        } else if (metadata.hasVideo()) {
-                            list.add(0, new MediaItemData(item.getId(), item.getFilename(), item.getProductUrl(), item.getBaseUrl(),
-                                    metadata.getWidth(), metadata.getHeight(), metadata.getCreationTime(), MediaItemData.MediaType.VIDEO));
-                            vCount++;
-                        } else {
-                            nCount++;
-                        }
 
+                if (indexMediaItemCount + page.getPageElementCount() <= oldMediaItemCount) {
+                    Log.d(TAG, "Already has data. Continue.");
+                    indexMediaItemCount += page.getPageElementCount();
+                    continue;
+                }
+
+                for (MediaItem item : page.iterateAll()) {
+                    indexMediaItemCount++;
+                    if (indexMediaItemCount <= oldMediaItemCount) {
+                        continue;
+                    }
+                    if (item.hasMediaMetadata()) {
+                        list.add(0, new MediaItemData(item, item.getMediaMetadata()));
                     }
                 }
             }
-            Log.d(TAG, String.format("pCount:%d, vCount:%d, nCount:%d", pCount, vCount, nCount));
-            client.close();
+
             Log.d(TAG, String.format("List size:%d", list.size()));
             return list;
         } catch (IOException e) {
@@ -91,8 +107,25 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
 
     @Override
     protected void onPostExecute(MediaItemList list) {
+        if (list != null) {
+            updatePreferences(mContext, mSelectedAlbumId, mAlbumList, list);
+        }
         if (mCallback != null) {
             mCallback.onMediaItemListResult(list);
         }
+    }
+
+    private static long getOldMediaItemCount(Context context, AlbumData album) {
+        AlbumList oldAlbumList = PreferenceUtils.getAlbumList(context);
+        if (oldAlbumList == null) return 0;
+        AlbumData oldAlbum = oldAlbumList.findFromId(album.getId());
+        if (oldAlbum == null) return 0;
+        return oldAlbum.getMediaItemCount();
+    }
+
+    private static void updatePreferences(Context context, String selectedAlbumId, AlbumList albumList, MediaItemList mediaItemList) {
+        PreferenceUtils.putSelectedAlbumId(context, selectedAlbumId);
+        PreferenceUtils.putAlbumList(context, albumList);
+        PreferenceUtils.putAllMediaItemList(context, mediaItemList);
     }
 }

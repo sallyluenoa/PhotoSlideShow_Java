@@ -111,6 +111,7 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
     private boolean initMkdirs() {
         if (!FileUtils.mkdir(FileUtils.getAppDir(mContext))) return false;
         for (MediaItemData.MediaType type : MediaItemData.MediaType.values()) {
+            if (type == MediaItemData.MediaType.OTHER) continue;
             if (!FileUtils.mkdir(FileUtils.getTypeDir(mContext, type))) return false;
         }
         return true;
