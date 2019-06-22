@@ -13,7 +13,6 @@ import com.example.photoslideshow.utils.PreferenceUtils;
 import com.google.photos.library.v1.PhotosLibraryClient;
 import com.google.photos.library.v1.internal.InternalPhotosLibraryClient;
 import com.google.photos.library.v1.proto.MediaItem;
-import com.google.photos.library.v1.proto.MediaMetadata;
 import com.google.photos.library.v1.proto.SearchMediaItemsRequest;
 
 import java.io.IOException;
@@ -51,8 +50,8 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
     @Override
     protected MediaItemList doInBackground(Void... voids) {
         final AlbumData album = mAlbumList.findFromId(mSelectedAlbumId);
-        final long oldMediaItemCount = getOldMediaItemCount(mContext, album);
-        if (album.getMediaItemCount() <= oldMediaItemCount) {
+        if (album.getMediaItemCount() <= getOldMediaItemCount(mContext, album) &&
+            PreferenceUtils.getAllMediaItemList(mContext) != null) {
             Log.d(TAG, "No need to update MediaItem list.");
             return null;
         }
@@ -68,26 +67,27 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
             InternalPhotosLibraryClient.SearchMediaItemsPagedResponse response = client.searchMediaItems(request);
 
             long indexMediaItemCount = 0;
-            MediaItemList list = PreferenceUtils.getAllMediaItemList(mContext);
-            if (list == null) list = new MediaItemList();
+            long expectedListSize = 100;
+            MediaItemList list = new MediaItemList();
 
             for (InternalPhotosLibraryClient.SearchMediaItemsPage page : response.iteratePages()) {
                 Log.d(TAG, "page count:" + page.getPageElementCount());
 
-                if (indexMediaItemCount + page.getPageElementCount() <= oldMediaItemCount) {
-                    Log.d(TAG, "Already has data. Continue.");
+                if (indexMediaItemCount + page.getPageElementCount() < album.getMediaItemCount() - expectedListSize) {
                     indexMediaItemCount += page.getPageElementCount();
+                    Log.d(TAG, "Skipped. current index sum=" + indexMediaItemCount);
                     continue;
                 }
 
                 for (MediaItem item : page.iterateAll()) {
+                    if (indexMediaItemCount >= album.getMediaItemCount() - expectedListSize) {
+                        if (item.hasMediaMetadata()) {
+                            list.add(0, new MediaItemData(item, item.getMediaMetadata()));
+                        } else {
+                            Log.d(TAG, "No MediaMetaData. index=" + indexMediaItemCount);
+                        }
+                    }
                     indexMediaItemCount++;
-                    if (indexMediaItemCount <= oldMediaItemCount) {
-                        continue;
-                    }
-                    if (item.hasMediaMetadata()) {
-                        list.add(0, new MediaItemData(item, item.getMediaMetadata()));
-                    }
                 }
             }
 
@@ -108,7 +108,9 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
     @Override
     protected void onPostExecute(MediaItemList list) {
         if (list != null) {
-            updatePreferences(mContext, mSelectedAlbumId, mAlbumList, list);
+            PreferenceUtils.putSelectedAlbumId(mContext, mSelectedAlbumId);
+            PreferenceUtils.putAlbumList(mContext, mAlbumList);
+            PreferenceUtils.putAllMediaItemList(mContext, list);
         }
         if (mCallback != null) {
             mCallback.onMediaItemListResult(list);
@@ -121,11 +123,5 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
         AlbumData oldAlbum = oldAlbumList.findFromId(album.getId());
         if (oldAlbum == null) return 0;
         return oldAlbum.getMediaItemCount();
-    }
-
-    private static void updatePreferences(Context context, String selectedAlbumId, AlbumList albumList, MediaItemList mediaItemList) {
-        PreferenceUtils.putSelectedAlbumId(context, selectedAlbumId);
-        PreferenceUtils.putAlbumList(context, albumList);
-        PreferenceUtils.putAllMediaItemList(context, mediaItemList);
     }
 }
