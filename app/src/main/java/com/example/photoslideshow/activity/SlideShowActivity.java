@@ -3,6 +3,7 @@ package com.example.photoslideshow.activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -17,9 +18,11 @@ import com.example.photoslideshow.fragment.ListDialogFragment;
 import com.example.photoslideshow.list.AlbumList;
 import com.example.photoslideshow.list.MediaItemList;
 import com.example.photoslideshow.manager.DownloadFilesManager;
+import com.example.photoslideshow.serialize.MediaItemData;
 import com.example.photoslideshow.task.GetAccessTokenAsyncTask;
 import com.example.photoslideshow.task.GetMediaItemListAsyncTask;
 import com.example.photoslideshow.task.GetSharedAlbumListAsyncTask;
+import com.example.photoslideshow.utils.BitmapUtils;
 import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
 
@@ -33,13 +36,16 @@ public class SlideShowActivity extends AppCompatActivity
 
     private static final int DLG_ID_SELECT_ALBUM = 1;
 
+    private final Handler mHandler = new Handler();
+
     private String mToken = null;
+    private String mSelectedAlbumId = null;
+
     private AlbumList mAlbumList = null;
     private MediaItemList mMediaItemList = null;
 
     private DownloadFilesManager mDownloadFilesManager = null;
-
-    private int mSelectedAlbumIndex = -1;
+    private Bitmap mBitmap = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +54,20 @@ public class SlideShowActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        String email = null;
-        Intent intent = getIntent();
-        if (intent != null) {
-            email = intent.getStringExtra(KEY_EMAIL);
+        mSelectedAlbumId = PreferenceUtils.getSelectedAlbumId(getApplicationContext());
+        mAlbumList = PreferenceUtils.getAlbumList(getApplicationContext());
+        mMediaItemList = PreferenceUtils.getRandMediaItemList(getApplicationContext());
+
+        if (PreferenceUtils.isUpdateNeeded(getApplicationContext())) {
+            String email = null;
+            Intent intent = getIntent();
+            if (intent != null) {
+                email = intent.getStringExtra(KEY_EMAIL);
+            }
+            startGetAccessToken(email);
+        } else {
+            startDownloadFiles();
         }
-        startGetAccessToken(email);
     }
 
     @Override
@@ -81,7 +95,8 @@ public class SlideShowActivity extends AppCompatActivity
     public void onItemClick(int id, int which) {
         switch (id) {
             case DLG_ID_SELECT_ALBUM:
-                mSelectedAlbumIndex = which;
+                mSelectedAlbumId = mAlbumList.get(which).getId();
+                PreferenceUtils.putSelectedAlbumId(getApplicationContext(), mSelectedAlbumId);
                 startGetMediaItemList();
                 break;
             default:
@@ -105,7 +120,8 @@ public class SlideShowActivity extends AppCompatActivity
         if (list != null) {
             Log.d(TAG, "Succeeded to get Album list.");
             mAlbumList = list;
-            showAlbumListDialog();
+            PreferenceUtils.putAlbumList(getApplicationContext(), mAlbumList);
+            startGetMediaItemList();
         } else {
             Log.d(TAG, "Failed to get Album list.");
         }
@@ -114,11 +130,16 @@ public class SlideShowActivity extends AppCompatActivity
     @Override
     public void onMediaItemListResult(MediaItemList list) {
         if (list != null) {
-            Log.d(TAG, "Succeeded to get MediaItem list.");
-            startDownloadFiles();
+            Log.d(TAG, "Succeeded to update MediaItem list.");
+            PreferenceUtils.putAllMediaItemList(getApplicationContext(), list);
         } else {
-            Log.d(TAG, "Failed to get MediaItem list.");
+            Log.d(TAG, "No need to update MediaItem list.");
+            list = PreferenceUtils.getAllMediaItemList(getApplicationContext());
         }
+        mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, 10);
+        PreferenceUtils.updateExpiredTime(getApplicationContext(), 1);
+        PreferenceUtils.putRandMediaItemList(getApplicationContext(), mMediaItemList);
+        startDownloadFiles();
     }
 
     private void startGetAccessToken(String email) {
@@ -139,17 +160,70 @@ public class SlideShowActivity extends AppCompatActivity
     private void startGetMediaItemList() {
         if (isNullAccessToken()) return;
         if (isNullAlbumList()) return;
-        if (isNotSelectedAlbumIndex()) return;
+        if (isNotSelectedAlbumId()) return;
 
         showProgress(R.string.getting_media_items_from_google_photo);
-        GetMediaItemListAsyncTask.start(mToken, mAlbumList.get(mSelectedAlbumIndex), this);
+        GetMediaItemListAsyncTask.start(getApplicationContext(), mToken, mSelectedAlbumId, mAlbumList, this);
     }
 
     private void startDownloadFiles() {
         if (isNullMediaItemList()) return;
 
+        showProgress(R.string.downloading_files_from_google_photo);
         mDownloadFilesManager = new DownloadFilesManager(getApplicationContext(), mMediaItemList);
         mDownloadFilesManager.start();
+
+        // 3秒後に表示開始.
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                checkImageAvailable(0);
+            }
+        }, 3000);
+    }
+
+    private void checkImageAvailable(int index) {
+        final int showIndex = (index < mDownloadFilesManager.getFileCount() ? index : 0);
+
+        if (showIndex < mDownloadFilesManager.getDownloadedFileCount()) {
+            // ダウンロード処理が完了している.
+            if (mDownloadFilesManager.isDownloadedIndex(showIndex)) {
+                // ダウンロード済、表示して次の表示は10秒後に設定.
+                hideProgress();
+                showImage(mDownloadFilesManager.getFilePath(showIndex));
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkImageAvailable(showIndex+1);
+                    }
+                }, 10000);
+            } else {
+                // ダウンロードに失敗しているので次を確認する.
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkImageAvailable(showIndex+1);
+                    }
+                });
+            }
+        } else {
+            // ダウンロード処理が未完了、1秒後に再確認.
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    checkImageAvailable(showIndex);
+                }
+            }, 1000);
+        }
+    }
+
+    private void showImage(String filePath) {
+        Bitmap bitmap = BitmapUtils.getBitmap(filePath);
+        ImageView imageView = (ImageView) findViewById(R.id.imageView);
+        imageView.setImageBitmap(bitmap);
+
+        if (mBitmap != null && !mBitmap.isRecycled()) mBitmap.recycle();
+        mBitmap = bitmap;
     }
 
     private void showAlbumListDialog() {
@@ -163,11 +237,6 @@ public class SlideShowActivity extends AppCompatActivity
                 R.string.select_album_dialog_title, mAlbumList.getTitleList(), TAG);
         fragment.setCancelable(false);
         fragment.show(getSupportFragmentManager(), ListDialogFragment.TAG);
-    }
-
-    private void setImageView(Bitmap bitmap) {
-        ImageView imageView = (ImageView) findViewById(R.id.imageView);
-        imageView.setImageBitmap(bitmap);
     }
 
     private void showProgress(int textId) {
@@ -206,8 +275,8 @@ public class SlideShowActivity extends AppCompatActivity
         return false;
     }
 
-    private boolean isNotSelectedAlbumIndex() {
-        if (mSelectedAlbumIndex < 0) {
+    private boolean isNotSelectedAlbumId() {
+        if (mSelectedAlbumId == null || mAlbumList.findFromId(mSelectedAlbumId) == null) {
             Log.d(TAG, "Album is not selected. Show album list dialog.");
             showAlbumListDialog();
             return true;

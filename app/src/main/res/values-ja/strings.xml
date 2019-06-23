@@ -16,6 +16,7 @@
     <string name="getting_access_token_from_google_api">Googleアカウントから必要な情報を取得しています...</string>
     <string name="getting_albums_from_google_photo">Googleフォトからアルバム情報を取得しています...</string>
     <string name="getting_media_items_from_google_photo">Googleフォトからメディア情報を取得しています...</string>
+    <string name="downloading_files_from_google_photo">Googleフォトからファイルをダウンロードしています...</string>
 
     <string name="failed_permissions_dialog_title">必要なパーミッション許可が完了していません。</string>
     <string name="failed_permissions_dialog_message">再度許可し直すかアプリを終了してください。</string>

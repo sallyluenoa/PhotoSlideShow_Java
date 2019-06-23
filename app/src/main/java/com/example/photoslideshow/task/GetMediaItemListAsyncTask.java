@@ -107,11 +107,6 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
 
     @Override
     protected void onPostExecute(MediaItemList list) {
-        if (list != null) {
-            PreferenceUtils.putSelectedAlbumId(mContext, mSelectedAlbumId);
-            PreferenceUtils.putAlbumList(mContext, mAlbumList);
-            PreferenceUtils.putAllMediaItemList(mContext, list);
-        }
         if (mCallback != null) {
             mCallback.onMediaItemListResult(list);
         }

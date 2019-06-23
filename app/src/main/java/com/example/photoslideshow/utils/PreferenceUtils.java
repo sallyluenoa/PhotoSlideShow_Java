@@ -59,7 +59,7 @@ public class PreferenceUtils {
         editor.commit();
     }
 
-    public static boolean isUpdateNeeded(Context context, long hours) {
+    public static boolean isUpdateNeeded(Context context) {
         long expired = getPreferences(context).getLong(KEY_EXPIRED_TIME, 0);
         return System.currentTimeMillis() > expired;
     }

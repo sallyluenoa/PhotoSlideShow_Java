@@ -28,8 +28,8 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
     // 値の変更時や public method からの値取得には排他処理 (synchronized) を適用すること.
     private int mIndex;
     private List<Integer> mIgnoredIndexes;
-    private boolean isRunning;
-    private boolean isCompleted;
+    private boolean mIsRunning;
+    private boolean mIsCompleted;
 
     public DownloadFilesManager(Context context, @NonNull MediaItemList list) {
         mContext = context;
@@ -37,8 +37,8 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
 
         mIndex = 0;
         mIgnoredIndexes = new ArrayList<>();
-        isRunning = false;
-        isCompleted = false;
+        mIsRunning = false;
+        mIsCompleted = false;
     }
 
     @Override
@@ -68,14 +68,29 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
     }
 
     /**
-     * 現在ダウンロード処理中のインデックスを返す.
+     * ダウンロードするファイル数を取得する.
      */
-    public int getIndex() {
+    public int getFileCount() {
+        return mMediaItemList.size();
+    }
+
+    /**
+     * ダウンロードチェック済のファイル数を取得する.
+     */
+    public int getDownloadedFileCount() {
         synchronized (this) {
-            return mIndex;
+            return mIsCompleted ? getFileCount() : mIndex;
         }
     }
 
+    /**
+     * 指定されたインデックスのダウンロードファイルパスを取得する.
+     */
+    public String getFilePath(int index) {
+        MediaItemData data = mMediaItemList.get(index);
+        return FileUtils.getFilePath(mContext, data.getFileName(), data.getMediaType());
+    }
+    
     /**
      * 指定されたインデックスのダウンロード処理が完了しているか確認する.
      * ダウンロード処理に成功している場合のみ true を返し、
@@ -92,7 +107,7 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
      */
     public boolean isRunning() {
         synchronized (this) {
-            return isRunning;
+            return mIsRunning;
         }
     }
 
@@ -101,7 +116,7 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
      */
     public boolean isCompleted() {
         synchronized (this) {
-            return isCompleted;
+            return mIsCompleted;
         }
     }
 
@@ -124,8 +139,8 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
         synchronized (this) {
             mIndex = 0;
             mIgnoredIndexes.clear();
-            isRunning = true;
-            isCompleted = false;
+            mIsRunning = true;
+            mIsCompleted = false;
         }
     }
 
@@ -177,8 +192,8 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
      */
     private void completedDownloadOccasion() {
         synchronized (this) {
-            isRunning = false;
-            isCompleted = true;
+            mIsRunning = false;
+            mIsCompleted = true;
         }
     }
 
