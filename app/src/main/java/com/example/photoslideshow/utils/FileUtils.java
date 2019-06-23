@@ -27,15 +27,10 @@ public class FileUtils {
 
     public static boolean mkdir(String dirPath) {
         File dir = new File(dirPath);
-        if (!dir.isDirectory()) {
-            Log.d(TAG, "It isn't directory: " + dir.getPath());
-            return false;
-        }
         if (dir.exists()) {
             Log.d(TAG, "Already existed dir: " + dir.getPath());
             return true;
         }
-
         if (dir.mkdir()) {
             Log.d(TAG, "Succeeded to make dir: " + dir.getPath());
             return true;

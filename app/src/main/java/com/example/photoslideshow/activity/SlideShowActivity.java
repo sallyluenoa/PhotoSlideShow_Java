@@ -171,25 +171,29 @@ public class SlideShowActivity extends AppCompatActivity
 
         showProgress(R.string.downloading_files_from_google_photo);
         mDownloadFilesManager = new DownloadFilesManager(getApplicationContext(), mMediaItemList);
-        mDownloadFilesManager.start();
-
-        // 3秒後に表示開始.
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                checkImageAvailable(0);
-            }
-        }, 3000);
+        if (mDownloadFilesManager.start()) {
+            // 3秒後に表示開始.
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    checkImageAvailable(0);
+                }
+            }, 3000);
+        } else {
+            Log.d(TAG, "Failed to start download files manager.");
+        }
     }
 
     private void checkImageAvailable(int index) {
         final int showIndex = (index < mDownloadFilesManager.getFileCount() ? index : 0);
+        Log.d(TAG, "Try to show index: " + showIndex);
 
         if (showIndex < mDownloadFilesManager.getDownloadedFileCount()) {
             // ダウンロード処理が完了している.
             if (mDownloadFilesManager.isDownloadedIndex(showIndex)) {
                 // ダウンロード済、表示して次の表示は10秒後に設定.
                 hideProgress();
+                Log.d(TAG, "Show image.");
                 showImage(mDownloadFilesManager.getFilePath(showIndex));
                 mHandler.postDelayed(new Runnable() {
                     @Override
@@ -199,6 +203,7 @@ public class SlideShowActivity extends AppCompatActivity
                 }, 10000);
             } else {
                 // ダウンロードに失敗しているので次を確認する.
+                Log.d(TAG, "Failed download. Go next image.");
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
@@ -208,6 +213,7 @@ public class SlideShowActivity extends AppCompatActivity
             }
         } else {
             // ダウンロード処理が未完了、1秒後に再確認.
+            Log.d(TAG, "Not completed download yet. Wait a moment...");
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {

@@ -68,11 +68,10 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Void, Boolean> {
                 while((readByte = dataInputStream.read(buffer)) != -1) {
                     dataOutputStream.write(buffer, 0, readByte);
                 }
+
+                fileOutputStream.flush();
+                dataOutputStream.flush();
             }
-
-            fileOutputStream.flush();
-            dataOutputStream.flush();
-
             return true;
         } catch (IOException e) {
             e.printStackTrace();

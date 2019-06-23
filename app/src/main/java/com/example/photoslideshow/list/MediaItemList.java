@@ -22,10 +22,18 @@ public class MediaItemList extends ArrayList<MediaItemData> {
         return subList;
     }
 
+    public MediaItemList getSubListFromIndex(int fromIndex, int toIndex) {
+        MediaItemList subList = new MediaItemList();
+        for (int i=fromIndex; i<toIndex; i++) {
+            subList.add(this.get(i));
+        }
+        return subList;
+    }
+
     public MediaItemList makeRandMediaItemList(MediaItemData.MediaType type, int size) {
         MediaItemList subList = getSubListFromMediaType(type);
         Collections.shuffle(subList);
-        return (subList.size() > size ? (MediaItemList) subList.subList(0, size) : subList);
+        return (subList.size() > size ? subList.getSubListFromIndex(0, size) : subList);
     }
 
 }

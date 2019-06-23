@@ -67,31 +67,30 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
             InternalPhotosLibraryClient.SearchMediaItemsPagedResponse response = client.searchMediaItems(request);
 
             long indexMediaItemCount = 0;
-            long expectedListSize = 100;
+            long expectedListCount = 100;
+            long ignoredListCount = album.getMediaItemCount() - expectedListCount;
             MediaItemList list = new MediaItemList();
+            Log.d(TAG, String.format("AlbumListCount: %d, ExpectedListCount: %d, IgnoredListCount: %d",
+                    album.getMediaItemCount(), expectedListCount, ignoredListCount));
 
             for (InternalPhotosLibraryClient.SearchMediaItemsPage page : response.iteratePages()) {
                 Log.d(TAG, "page count:" + page.getPageElementCount());
 
-                if (indexMediaItemCount + page.getPageElementCount() < album.getMediaItemCount() - expectedListSize) {
+                if (indexMediaItemCount + page.getPageElementCount() < ignoredListCount) {
                     indexMediaItemCount += page.getPageElementCount();
                     Log.d(TAG, "Skipped. current index sum=" + indexMediaItemCount);
                     continue;
                 }
 
                 for (MediaItem item : page.iterateAll()) {
-                    if (indexMediaItemCount >= album.getMediaItemCount() - expectedListSize) {
-                        if (item.hasMediaMetadata()) {
-                            list.add(0, new MediaItemData(item, item.getMediaMetadata()));
-                        } else {
-                            Log.d(TAG, "No MediaMetaData. index=" + indexMediaItemCount);
-                        }
+                    if (indexMediaItemCount >= ignoredListCount) {
+                        list.add(new MediaItemData(item, item.getMediaMetadata()));
                     }
                     indexMediaItemCount++;
                 }
             }
 
-            Log.d(TAG, String.format("List size:%d", list.size()));
+            Log.d(TAG, String.format("Final MediaItemList size: %d", list.size()));
             return list;
         } catch (IOException e) {
             e.printStackTrace();
