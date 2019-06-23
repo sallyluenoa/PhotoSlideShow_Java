@@ -160,7 +160,7 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
                 try {
                     MediaItemData data = mMediaItemList.get(mIndex);
                     DownloadFileAsyncTask.start(
-                            data.getBaseUrl(),
+                            data.getDownloadUrl(500, 1000),
                             FileUtils.getFilePath(mContext, data.getFileName(), data.getMediaType()),
                             DownloadFilesManager.this);
                 } catch (MalformedURLException e) {

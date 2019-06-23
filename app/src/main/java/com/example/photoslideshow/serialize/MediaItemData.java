@@ -2,6 +2,7 @@ package com.example.photoslideshow.serialize;
 
 import android.support.annotation.NonNull;
 
+import com.example.photoslideshow.utils.BitmapUtils;
 import com.google.photos.library.v1.proto.MediaItem;
 import com.google.photos.library.v1.proto.MediaMetadata;
 import com.google.protobuf.Timestamp;
@@ -86,5 +87,10 @@ public class MediaItemData implements Serializable {
 
     public MediaType getMediaType() {
         return mediaType;
+    }
+
+    public String getDownloadUrl(long expWidth, long expHeight) {
+        float scale = BitmapUtils.getEffectiveScale(width, height, expWidth, expHeight);
+        return String.format("%s=w%d-h%d", baseUrl, (long)(width * scale), (long)(height * scale));
     }
 }

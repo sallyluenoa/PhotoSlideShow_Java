@@ -43,7 +43,7 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Void, Boolean> {
 
     @Override
     protected Boolean doInBackground(Void... params) {
-        Log.d(TAG, "Try to download file.");
+        Log.d(TAG, "Try to download file. URL: " + mInputUrl.toString());
 
         HttpURLConnection con = null;
         InputStream inputStream = null;
@@ -69,6 +69,9 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Void, Boolean> {
                     dataOutputStream.write(buffer, 0, readByte);
                 }
             }
+
+            fileOutputStream.flush();
+            dataOutputStream.flush();
 
             return true;
         } catch (IOException e) {
