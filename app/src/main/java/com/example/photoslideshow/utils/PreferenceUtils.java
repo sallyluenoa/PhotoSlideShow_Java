@@ -2,6 +2,7 @@ package com.example.photoslideshow.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import com.example.photoslideshow.list.AlbumList;
 import com.example.photoslideshow.list.MediaItemList;
@@ -55,12 +56,14 @@ public class PreferenceUtils {
     public static void updateExpiredTime(Context context, long hours) {
         SharedPreferences.Editor editor = getPreferencesEditor(context);
         long expired = System.currentTimeMillis() + hours * 60 * 60 * 1000;
+        Log.d(TAG, "Update expired time: " + DateUtils.getDateString(expired));
         editor.putLong(KEY_EXPIRED_TIME, expired);
         editor.commit();
     }
 
     public static boolean isUpdateNeeded(Context context) {
         long expired = getPreferences(context).getLong(KEY_EXPIRED_TIME, 0);
+        Log.d(TAG, "Current expired time: " + DateUtils.getDateString(expired));
         return System.currentTimeMillis() > expired;
     }
 
