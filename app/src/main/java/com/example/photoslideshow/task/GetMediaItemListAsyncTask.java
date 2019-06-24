@@ -50,11 +50,11 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
     @Override
     protected MediaItemList doInBackground(Void... voids) {
         final AlbumData album = mAlbumList.findFromId(mSelectedAlbumId);
-        if (album.getMediaItemCount() <= getOldMediaItemCount(mContext, album) &&
-            PreferenceUtils.getAllMediaItemList(mContext) != null) {
-            Log.d(TAG, "No need to update MediaItem list.");
-            return null;
-        }
+//        if (album.getMediaItemCount() <= getOldMediaItemCount(mContext, album) &&
+//            PreferenceUtils.getAllMediaItemList(mContext) != null) {
+//            Log.d(TAG, "No need to update MediaItem list.");
+//            return null;
+//        }
 
         Log.d(TAG, "Try to get MediaItem list.");
         PhotosLibraryClient client = null;

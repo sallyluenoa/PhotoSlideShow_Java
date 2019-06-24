@@ -72,7 +72,7 @@ public class DownloadFileAsyncTask extends AsyncTask<Void, Void, Boolean> {
                 fileOutputStream.flush();
                 dataOutputStream.flush();
             }
-            return true;
+            return mOutputFile.exists();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {

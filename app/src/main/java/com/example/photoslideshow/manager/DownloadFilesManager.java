@@ -87,8 +87,7 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
      * 指定されたインデックスのダウンロードファイルパスを取得する.
      */
     public String getFilePath(int index) {
-        MediaItemData data = mMediaItemList.get(index);
-        return FileUtils.getFilePath(mContext, data.getFileName(), data.getMediaType());
+        return mMediaItemList.get(index).getFilePath(mContext);
     }
     
     /**

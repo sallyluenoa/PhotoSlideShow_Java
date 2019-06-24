@@ -1,12 +1,15 @@
 package com.example.photoslideshow.serialize;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.example.photoslideshow.utils.BitmapUtils;
+import com.example.photoslideshow.utils.FileUtils;
 import com.google.photos.library.v1.proto.MediaItem;
 import com.google.photos.library.v1.proto.MediaMetadata;
 import com.google.protobuf.Timestamp;
 
+import java.io.File;
 import java.io.Serializable;
 
 public class MediaItemData implements Serializable {
@@ -92,5 +95,13 @@ public class MediaItemData implements Serializable {
     public String getDownloadUrl(long expWidth, long expHeight) {
         float scale = BitmapUtils.getEffectiveScale(width, height, expWidth, expHeight);
         return String.format("%s=w%d-h%d", baseUrl, (long)(width * scale), (long)(height * scale));
+    }
+
+    public String getFilePath(Context context) {
+        return FileUtils.getFilePath(context, fileName, mediaType);
+    }
+
+    public boolean isDownloadedFile(Context context) {
+        return new File(getFilePath(context)).exists();
     }
 }

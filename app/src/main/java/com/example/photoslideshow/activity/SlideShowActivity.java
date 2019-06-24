@@ -70,7 +70,7 @@ public class SlideShowActivity extends AppCompatActivity
             }
             startGetAccessToken(email);
         } else {
-            startDownloadFiles();
+            checkImageAvailableFromMediaItemList(0);
         }
     }
 
@@ -180,7 +180,7 @@ public class SlideShowActivity extends AppCompatActivity
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    checkImageAvailable(0);
+                    checkImageAvailableFromDownloadManager(0);
                 }
             }, 3000);
         } else {
@@ -188,7 +188,7 @@ public class SlideShowActivity extends AppCompatActivity
         }
     }
 
-    private void checkImageAvailable(int index) {
+    private void checkImageAvailableFromDownloadManager(int index) {
         final int showIndex = (index < mDownloadFilesManager.getFileCount() ? index : 0);
         Log.d(TAG, "Try to show index: " + showIndex);
 
@@ -202,7 +202,7 @@ public class SlideShowActivity extends AppCompatActivity
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        checkImageAvailable(showIndex+1);
+                        checkImageAvailableFromDownloadManager(showIndex + 1);
                     }
                 }, 10000);
             } else {
@@ -211,7 +211,7 @@ public class SlideShowActivity extends AppCompatActivity
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        checkImageAvailable(showIndex+1);
+                        checkImageAvailableFromDownloadManager(showIndex + 1);
                     }
                 });
             }
@@ -221,9 +221,36 @@ public class SlideShowActivity extends AppCompatActivity
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    checkImageAvailable(showIndex);
+                    checkImageAvailableFromDownloadManager(showIndex);
                 }
             }, 1000);
+        }
+    }
+
+    private void checkImageAvailableFromMediaItemList(int index) {
+        final int showIndex = (index < mMediaItemList.size() ? index : 0);
+        Log.d(TAG, "Try to show index: " + showIndex);
+
+        MediaItemData data = mMediaItemList.get(showIndex);
+        if (data.isDownloadedFile(getApplicationContext())) {
+            // ダウンロード済、表示して次の表示は10秒後に設定.
+            Log.d(TAG, "Show image.");
+            showImage(data.getFilePath(getApplicationContext()));
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    checkImageAvailableFromMediaItemList(showIndex + 1);
+                }
+            }, 10000);
+        } else {
+            // ダウンロードに失敗しているので次を確認する.
+            Log.d(TAG, "Failed download. Go next image.");
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    checkImageAvailableFromMediaItemList(showIndex + 1);
+                }
+            });
         }
     }
 
