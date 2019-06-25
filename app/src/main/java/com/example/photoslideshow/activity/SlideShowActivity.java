@@ -37,6 +37,11 @@ public class SlideShowActivity extends AppCompatActivity
 
     private static final int DLG_ID_SELECT_ALBUM = 1;
 
+    private static final int CHANGE_IMAGE_INTERVAL_SECS = 10;
+    private static final int SHOW_IMAGE_FILES_MAX_COUNT = 30;
+    private static final int SHOW_IMAGE_FILES_MIN_COUNT = 5;
+    private static final int EXPIRED_TIME_HOURS = 24;
+
     private final Handler mHandler = new Handler();
 
     private String mToken = null;
@@ -129,8 +134,8 @@ public class SlideShowActivity extends AppCompatActivity
         if (list != null) {
             Log.d(TAG, "Succeeded to update MediaItem list.");
             PreferenceUtils.putAllMediaItemList(getApplicationContext(), list);
-            mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, 10);
-            PreferenceUtils.updateExpiredTime(getApplicationContext(), 1);
+            mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, SHOW_IMAGE_FILES_MAX_COUNT);
+            PreferenceUtils.updateExpiredTime(getApplicationContext(), EXPIRED_TIME_HOURS);
             PreferenceUtils.putRandMediaItemList(getApplicationContext(), mMediaItemList);
             startDownloadFiles();
         } else {
@@ -175,13 +180,13 @@ public class SlideShowActivity extends AppCompatActivity
         mDownloadFilesManager = new DownloadFilesManager(getApplicationContext(), mMediaItemList);
         if (mDownloadFilesManager.start()) {
             // 3秒後に表示開始.
-            Log.d(TAG, "Show downloaded image files 3 secs later.");
+            Log.d(TAG, "Show downloaded image files 1 sec later.");
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     checkImageAvailableFromDownloadManager(0);
                 }
-            }, 3000);
+            }, 1000);
         } else {
             Log.d(TAG, "Failed to start download files manager.");
             startShowLocalMediaItemList();
@@ -204,7 +209,7 @@ public class SlideShowActivity extends AppCompatActivity
                     public void run() {
                         checkImageAvailableFromDownloadManager(showIndex + 1);
                     }
-                }, 10000);
+                }, 1000 * CHANGE_IMAGE_INTERVAL_SECS);
             } else {
                 // ダウンロードに失敗しているので次を確認する.
                 Log.d(TAG, "Failed download. Go next image.");
@@ -230,7 +235,7 @@ public class SlideShowActivity extends AppCompatActivity
     private void startShowLocalMediaItemList() {
         mMediaItemList = PreferenceUtils.getRandMediaItemList(getApplicationContext());
         int count = mMediaItemList.getDownloadedFilesCount(getApplicationContext());
-        if (count >= 10) {
+        if (count >= SHOW_IMAGE_FILES_MIN_COUNT) {
             Log.d(TAG, "Show local image files. Downloaded files count: " + count);
             checkImageAvailableFromMediaItemList(0);
         } else {
@@ -252,7 +257,7 @@ public class SlideShowActivity extends AppCompatActivity
                 public void run() {
                     checkImageAvailableFromMediaItemList(showIndex + 1);
                 }
-            }, 10000);
+            }, 1000 * CHANGE_IMAGE_INTERVAL_SECS);
         } else {
             // ダウンロードに失敗しているので次を確認する.
             Log.d(TAG, "Failed download. Go next image.");
