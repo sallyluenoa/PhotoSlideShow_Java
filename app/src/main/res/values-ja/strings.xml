@@ -24,6 +24,9 @@
     <string name="failed_sign_in_dialog_title">サインインに失敗しました。</string>
     <string name="failed_sign_in_dialog_message">再試行するかアプリを終了してください。</string>
 
+    <string name="failed_show_images_dialog_title">画像の表示に失敗しました。</string>
+    <string name="failed_show_images_dialog_message">一度アプリを終了して再度お試しください。</string>
+
     <string name="select_album_dialog_title">アルバムを選択してください。</string>
 
 </resources>

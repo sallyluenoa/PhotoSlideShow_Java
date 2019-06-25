@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.photoslideshow.R;
+import com.example.photoslideshow.fragment.AlertDialogFragment;
 import com.example.photoslideshow.fragment.ListDialogFragment;
 import com.example.photoslideshow.list.AlbumList;
 import com.example.photoslideshow.list.MediaItemList;
@@ -28,13 +29,14 @@ import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
 
 public class SlideShowActivity extends AppCompatActivity
-    implements  ListDialogFragment.OnClickListener,
+    implements AlertDialogFragment.OnClickListener, ListDialogFragment.OnClickListener,
         GetAccessTokenAsyncTask.ICallback, GetSharedAlbumListAsyncTask.ICallback, GetMediaItemListAsyncTask.ICallback {
 
     private static final String TAG = SlideShowActivity.class.getSimpleName();
 
     public static final String KEY_EMAIL = "email";
 
+    private static final int DLG_ID_FAILED_SHOW_IMAGE = 0;
     private static final int DLG_ID_SELECT_ALBUM = 1;
 
     private static final int CHANGE_IMAGE_INTERVAL_SECS = 10;
@@ -89,6 +91,17 @@ public class SlideShowActivity extends AppCompatActivity
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(int id) {
+        switch (id) {
+            case DLG_ID_FAILED_SHOW_IMAGE:
+                finish();
+                break;
+            default:
+                break;
+        }
     }
 
     @Override
@@ -240,6 +253,7 @@ public class SlideShowActivity extends AppCompatActivity
             checkImageAvailableFromMediaItemList(0);
         } else {
             Log.d(TAG, "There are a few image files. Downloaded files count: " + count);
+            showFailedDialog();
         }
     }
 
@@ -251,6 +265,7 @@ public class SlideShowActivity extends AppCompatActivity
         if (data.isDownloadedFile(getApplicationContext())) {
             // ダウンロード済、表示して次の表示は10秒後に設定.
             Log.d(TAG, "Show image.");
+            hideProgress();
             showImage(data.getFilePath(getApplicationContext()));
             mHandler.postDelayed(new Runnable() {
                 @Override
@@ -290,6 +305,15 @@ public class SlideShowActivity extends AppCompatActivity
                 R.string.select_album_dialog_title, mAlbumList.getTitleList(), TAG);
         fragment.setCancelable(false);
         fragment.show(getSupportFragmentManager(), ListDialogFragment.TAG);
+    }
+
+    private void showFailedDialog() {
+        hideProgress();
+        AlertDialogFragment fragment = AlertDialogFragment.newInstance(DLG_ID_FAILED_SHOW_IMAGE,
+                R.string.failed_show_images_dialog_title, R.string.failed_show_images_dialog_message,
+                R.string.ok, TAG);
+        fragment.setCancelable(false);
+        fragment.show(getSupportFragmentManager(), AlertDialogFragment.TAG);
     }
 
     private void showProgress(int textId) {
