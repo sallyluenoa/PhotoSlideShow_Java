@@ -58,19 +58,10 @@ public class SlideShowActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        mSelectedAlbumId = PreferenceUtils.getSelectedAlbumId(getApplicationContext());
-        mAlbumList = PreferenceUtils.getAlbumList(getApplicationContext());
-        mMediaItemList = PreferenceUtils.getRandMediaItemList(getApplicationContext());
-
         if (PreferenceUtils.isUpdateNeeded(getApplicationContext())) {
-            String email = null;
-            Intent intent = getIntent();
-            if (intent != null) {
-                email = intent.getStringExtra(KEY_EMAIL);
-            }
-            startGetAccessToken(email);
+            startGetAccessToken();
         } else {
-            checkImageAvailableFromMediaItemList(0);
+            startShowLocalMediaItemList();
         }
     }
 
@@ -116,6 +107,7 @@ public class SlideShowActivity extends AppCompatActivity
             startGetSharedAlbumList();
         } else {
             Log.d(TAG, "Failed to get access token.");
+            startShowLocalMediaItemList();
         }
     }
 
@@ -128,6 +120,7 @@ public class SlideShowActivity extends AppCompatActivity
             startGetMediaItemList();
         } else {
             Log.d(TAG, "Failed to get Album list.");
+            startShowLocalMediaItemList();
         }
     }
 
@@ -136,17 +129,22 @@ public class SlideShowActivity extends AppCompatActivity
         if (list != null) {
             Log.d(TAG, "Succeeded to update MediaItem list.");
             PreferenceUtils.putAllMediaItemList(getApplicationContext(), list);
+            mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, 10);
+            PreferenceUtils.updateExpiredTime(getApplicationContext(), 1);
+            PreferenceUtils.putRandMediaItemList(getApplicationContext(), mMediaItemList);
+            startDownloadFiles();
         } else {
-            Log.d(TAG, "No need to update MediaItem list.");
-            list = PreferenceUtils.getAllMediaItemList(getApplicationContext());
+            Log.d(TAG, "Failed to update MediaItem list.");
+            startShowLocalMediaItemList();
         }
-        mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, 10);
-        PreferenceUtils.updateExpiredTime(getApplicationContext(), 1);
-        PreferenceUtils.putRandMediaItemList(getApplicationContext(), mMediaItemList);
-        startDownloadFiles();
     }
 
-    private void startGetAccessToken(String email) {
+    private void startGetAccessToken() {
+        String email = null;
+        Intent intent = getIntent();
+        if (intent != null) {
+            email = intent.getStringExtra(KEY_EMAIL);
+        }
         if (email == null) {
             email = PreferenceUtils.getEmail(getApplicationContext());
         }
@@ -177,6 +175,7 @@ public class SlideShowActivity extends AppCompatActivity
         mDownloadFilesManager = new DownloadFilesManager(getApplicationContext(), mMediaItemList);
         if (mDownloadFilesManager.start()) {
             // 3秒後に表示開始.
+            Log.d(TAG, "Show downloaded image files 3 secs later.");
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -185,6 +184,7 @@ public class SlideShowActivity extends AppCompatActivity
             }, 3000);
         } else {
             Log.d(TAG, "Failed to start download files manager.");
+            startShowLocalMediaItemList();
         }
     }
 
@@ -224,6 +224,17 @@ public class SlideShowActivity extends AppCompatActivity
                     checkImageAvailableFromDownloadManager(showIndex);
                 }
             }, 1000);
+        }
+    }
+
+    private void startShowLocalMediaItemList() {
+        mMediaItemList = PreferenceUtils.getRandMediaItemList(getApplicationContext());
+        int count = mMediaItemList.getDownloadedFilesCount(getApplicationContext());
+        if (count >= 10) {
+            Log.d(TAG, "Show local image files. Downloaded files count: " + count);
+            checkImageAvailableFromMediaItemList(0);
+        } else {
+            Log.d(TAG, "There are a few image files. Downloaded files count: " + count);
         }
     }
 
@@ -288,7 +299,7 @@ public class SlideShowActivity extends AppCompatActivity
     private boolean isNullAccessToken() {
         if (mToken == null) {
             Log.d(TAG, "Access token is null. Try to get it again.");
-            startGetAccessToken(null);
+            startGetAccessToken();
             return true;
         }
         return false;

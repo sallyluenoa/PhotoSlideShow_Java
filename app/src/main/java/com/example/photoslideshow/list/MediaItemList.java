@@ -1,5 +1,7 @@
 package com.example.photoslideshow.list;
 
+import android.content.Context;
+
 import com.example.photoslideshow.serialize.MediaItemData;
 
 import java.util.ArrayList;
@@ -34,6 +36,14 @@ public class MediaItemList extends ArrayList<MediaItemData> {
         MediaItemList subList = getSubListFromMediaType(type);
         Collections.shuffle(subList);
         return (subList.size() > size ? subList.getSubListFromIndex(0, size) : subList);
+    }
+
+    public int getDownloadedFilesCount(Context context) {
+        int count = 0;
+        for (MediaItemData data : this) {
+            if (data.isDownloadedFile(context)) count++;
+        }
+        return count;
     }
 
 }
