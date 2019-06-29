@@ -55,6 +55,10 @@ public class SlideShowActivity extends AppCompatActivity
     private DownloadFilesManager mDownloadFilesManager = null;
     private Bitmap mBitmap = null;
 
+    private boolean mIsGettingProcess = false;
+    private boolean mIsActivityForeground = false;
+    private int mShowIndex = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,12 +68,28 @@ public class SlideShowActivity extends AppCompatActivity
         setContentView(R.layout.activity_slide_show);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+    }
 
-        if (PreferenceUtils.isUpdateNeeded(getApplicationContext())) {
-            startGetAccessToken();
-        } else {
-            startShowLocalMediaItemList(true);
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        mIsActivityForeground = true;
+        if (!mIsGettingProcess) {
+            if (PreferenceUtils.isUpdateNeeded(getApplicationContext())) {
+                startGetAccessToken();
+            } else {
+                startShowLocalMediaItemList(true);
+            }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        mIsActivityForeground = false;
+        mHandler.removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -166,6 +186,7 @@ public class SlideShowActivity extends AppCompatActivity
         if (email == null) {
             email = PreferenceUtils.getEmail(getApplicationContext());
         }
+        mIsGettingProcess = true;
         showProgress(R.string.getting_access_token_from_google_api);
         GetAccessTokenAsyncTask.start(getApplicationContext(), email, GoogleApiUtils.SCOPE_PHOTO_READONLY, this);
     }
@@ -173,6 +194,7 @@ public class SlideShowActivity extends AppCompatActivity
     private void startGetSharedAlbumList() {
         if (isNullAccessToken()) return;
 
+        mIsGettingProcess = true;
         showProgress(R.string.getting_albums_from_google_photo);
         GetSharedAlbumListAsyncTask.start(mToken, this);
     }
@@ -182,6 +204,7 @@ public class SlideShowActivity extends AppCompatActivity
         if (isNullAlbumList()) return;
         if (isNotSelectedAlbumId()) return;
 
+        mIsGettingProcess = true;
         showProgress(R.string.getting_media_items_from_google_photo);
         GetMediaItemListAsyncTask.start(getApplicationContext(), mToken, mSelectedAlbumId, mAlbumList, this);
     }
@@ -189,17 +212,23 @@ public class SlideShowActivity extends AppCompatActivity
     private void startDownloadFiles() {
         if (isNullMediaItemList()) return;
 
+        mToken = null;
+        mIsGettingProcess = false;
         showProgress(R.string.downloading_files_from_google_photo);
         mDownloadFilesManager = new DownloadFilesManager(getApplicationContext(), mMediaItemList);
         if (mDownloadFilesManager.start()) {
-            // 3秒後に表示開始.
-            Log.d(TAG, "Show downloaded image files 1 sec later.");
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    checkImageAvailableFromDownloadManager(0);
-                }
-            }, 1000);
+            if (mIsActivityForeground) {
+                // 1秒後に表示開始.
+                Log.d(TAG, "Show downloaded image files 1 sec later.");
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        checkImageAvailableFromDownloadManager(0);
+                    }
+                }, 1000);
+            } else {
+                Log.d(TAG, "Activity is background.");
+            }
         } else {
             Log.d(TAG, "Failed to start download files manager.");
             startShowLocalMediaItemList(false);
@@ -207,20 +236,20 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     private void checkImageAvailableFromDownloadManager(int index) {
-        final int showIndex = (index < mDownloadFilesManager.getFileCount() ? index : 0);
-        Log.d(TAG, "Try to show index: " + showIndex);
+        mShowIndex = (index < mDownloadFilesManager.getFileCount() ? index : 0);
+        Log.d(TAG, "Try to show index: " + mShowIndex);
 
-        if (showIndex < mDownloadFilesManager.getDownloadedFileCount()) {
+        if (mShowIndex < mDownloadFilesManager.getDownloadedFileCount()) {
             // ダウンロード処理が完了している.
-            if (mDownloadFilesManager.isDownloadedIndex(showIndex)) {
+            if (mDownloadFilesManager.isDownloadedIndex(mShowIndex)) {
                 // ダウンロード済、表示して次の表示は10秒後に設定.
                 hideProgress();
                 Log.d(TAG, "Show image.");
-                showImage(mDownloadFilesManager.getFilePath(showIndex));
+                showImage(mDownloadFilesManager.getFilePath(mShowIndex));
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        checkImageAvailableFromDownloadManager(showIndex + 1);
+                        checkImageAvailableFromDownloadManager(mShowIndex + 1);
                     }
                 }, 1000 * CHANGE_IMAGE_INTERVAL_SECS);
             } else {
@@ -229,7 +258,7 @@ public class SlideShowActivity extends AppCompatActivity
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        checkImageAvailableFromDownloadManager(showIndex + 1);
+                        checkImageAvailableFromDownloadManager(mShowIndex + 1);
                     }
                 });
             }
@@ -239,18 +268,31 @@ public class SlideShowActivity extends AppCompatActivity
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    checkImageAvailableFromDownloadManager(showIndex);
+                    checkImageAvailableFromDownloadManager(mShowIndex);
                 }
             }, 1000);
         }
     }
 
     private void startShowLocalMediaItemList(boolean retry) {
+        mToken = null;
+        mIsGettingProcess = false;
         mMediaItemList = PreferenceUtils.getRandMediaItemList(getApplicationContext());
+        if (mMediaItemList == null) {
+            if (retry) {
+                Log.d(TAG, "MediaItem list is null. Try to get files from Server.");
+                startGetAccessToken();
+            } else {
+                Log.d(TAG, "MediaItem list is null. Show failed dialog.");
+                showFailedDialog();
+            }
+            return;
+        }
+
         int count = mMediaItemList.getDownloadedFilesCount(getApplicationContext());
         if (count >= SHOW_IMAGE_FILES_MIN_COUNT) {
             Log.d(TAG, "Show local image files. Downloaded files count: " + count);
-            checkImageAvailableFromMediaItemList(0);
+            checkImageAvailableFromMediaItemList(mShowIndex);
         } else {
             if (retry) {
                 Log.d(TAG, "There are a few image files. Try to get files from Server.");
@@ -263,10 +305,10 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     private void checkImageAvailableFromMediaItemList(int index) {
-        final int showIndex = (index < mMediaItemList.size() ? index : 0);
-        Log.d(TAG, "Try to show index: " + showIndex);
+        mShowIndex = (index < mMediaItemList.size() ? index : 0);
+        Log.d(TAG, "Try to show index: " + mShowIndex);
 
-        MediaItemData data = mMediaItemList.get(showIndex);
+        MediaItemData data = mMediaItemList.get(mShowIndex);
         if (data.isDownloadedFile(getApplicationContext())) {
             // ダウンロード済、表示して次の表示は10秒後に設定.
             Log.d(TAG, "Show image.");
@@ -275,7 +317,7 @@ public class SlideShowActivity extends AppCompatActivity
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    checkImageAvailableFromMediaItemList(showIndex + 1);
+                    checkImageAvailableFromMediaItemList(mShowIndex + 1);
                 }
             }, 1000 * CHANGE_IMAGE_INTERVAL_SECS);
         } else {
@@ -284,7 +326,7 @@ public class SlideShowActivity extends AppCompatActivity
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    checkImageAvailableFromMediaItemList(showIndex + 1);
+                    checkImageAvailableFromMediaItemList(mShowIndex + 1);
                 }
             });
         }
@@ -300,11 +342,9 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     private void showAlbumListDialog() {
-        if (mAlbumList == null) {
-            Log.d(TAG, "Album list is null. Try to get it again.");
-            startGetSharedAlbumList();
-            return;
-        }
+        if (isNullAlbumList()) return;
+
+        mIsGettingProcess = true;
         hideProgress();
         ListDialogFragment fragment = ListDialogFragment.newInstance(DLG_ID_SELECT_ALBUM,
                 R.string.select_album_dialog_title, mAlbumList.getTitleList(), TAG);
@@ -313,6 +353,7 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     private void showFailedDialog() {
+        mIsGettingProcess = true;
         hideProgress();
         AlertDialogFragment fragment = AlertDialogFragment.newInstance(DLG_ID_FAILED_SHOW_IMAGE,
                 R.string.failed_show_images_dialog_title, R.string.failed_show_images_dialog_message,
@@ -358,6 +399,7 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     private boolean isNotSelectedAlbumId() {
+        mSelectedAlbumId = PreferenceUtils.getSelectedAlbumId(getApplicationContext());
         if (mSelectedAlbumId == null || mAlbumList.findFromId(mSelectedAlbumId) == null) {
             Log.d(TAG, "Album is not selected. Show album list dialog.");
             showAlbumListDialog();
