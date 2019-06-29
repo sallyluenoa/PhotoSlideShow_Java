@@ -83,7 +83,7 @@ public class GetMediaItemListAsyncTask extends AsyncTask<Void, Void, MediaItemLi
                 }
 
                 for (MediaItem item : page.iterateAll()) {
-                    if (indexMediaItemCount >= ignoredListCount) {
+                    if (indexMediaItemCount >= ignoredListCount && list.findFromId(item.getId()) == null) {
                         list.add(new MediaItemData(item, item.getMediaMetadata()));
                     }
                     indexMediaItemCount++;

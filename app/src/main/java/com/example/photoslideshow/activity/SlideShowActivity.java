@@ -334,7 +334,7 @@ public class SlideShowActivity extends AppCompatActivity
 
     private void showImage(String filePath) {
         Bitmap bitmap = BitmapUtils.getBitmap(filePath);
-        ImageView imageView = (ImageView) findViewById(R.id.imageView);
+        ImageView imageView = findViewById(R.id.imageView);
         imageView.setImageBitmap(bitmap);
 
         if (mBitmap != null && !mBitmap.isRecycled()) mBitmap.recycle();

@@ -46,8 +46,8 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        TextView versionView = (TextView) findViewById(R.id.version_text_view);
-        versionView.setText("v" + BuildConfig.VERSION_NAME);
+        TextView versionView = findViewById(R.id.version_text_view);
+        versionView.setText(getString(R.string.app_version, BuildConfig.VERSION_NAME));
 
         new Handler().postDelayed(new Runnable() {
             @Override

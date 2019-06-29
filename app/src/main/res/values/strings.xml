@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">PhotoSlideShow</string>
     <string name="dir_name" translatable="false">PhotoSlideShow</string>
+    <string name="app_version" translatable="false">v%1$s</string>
 
     <!-- Common. -->
     <string name="ok">OK</string>
