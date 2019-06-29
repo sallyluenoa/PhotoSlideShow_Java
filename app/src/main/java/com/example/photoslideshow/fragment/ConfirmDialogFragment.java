@@ -66,22 +66,16 @@ public class ConfirmDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(title);
         builder.setMessage(message);
-        builder.setPositiveButton(positive, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (mListener != null) {
-                    mListener.onPositiveClick(mId);
-                }
-                dialog.cancel();
+        builder.setPositiveButton(positive, (dialog, which) -> {
+            dialog.cancel();
+            if (mListener != null) {
+                mListener.onPositiveClick(mId);
             }
         });
-        builder.setNegativeButton(negative, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (mListener != null) {
-                    mListener.onNegativeClick(mId);
-                }
-                dialog.cancel();
+        builder.setNegativeButton(negative, (dialog, which) -> {
+            dialog.cancel();
+            if (mListener != null) {
+                mListener.onNegativeClick(mId);
             }
         });
         return builder.create();

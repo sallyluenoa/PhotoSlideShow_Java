@@ -220,12 +220,7 @@ public class SlideShowActivity extends AppCompatActivity
             if (mIsActivityForeground) {
                 // 1秒後に表示開始.
                 Log.d(TAG, "Show downloaded image files 1 sec later.");
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkImageAvailableFromDownloadManager(0);
-                    }
-                }, 1000);
+                mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(0), 1000);
             } else {
                 Log.d(TAG, "Activity is background.");
             }
@@ -246,31 +241,17 @@ public class SlideShowActivity extends AppCompatActivity
                 hideProgress();
                 Log.d(TAG, "Show image.");
                 showImage(mDownloadFilesManager.getFilePath(mShowIndex));
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkImageAvailableFromDownloadManager(mShowIndex + 1);
-                    }
-                }, 1000 * CHANGE_IMAGE_INTERVAL_SECS);
+                mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(mShowIndex + 1),
+                        1000 * CHANGE_IMAGE_INTERVAL_SECS);
             } else {
                 // ダウンロードに失敗しているので次を確認する.
                 Log.d(TAG, "Failed download. Go next image.");
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkImageAvailableFromDownloadManager(mShowIndex + 1);
-                    }
-                });
+                mHandler.post(() -> checkImageAvailableFromDownloadManager(mShowIndex + 1));
             }
         } else {
             // ダウンロード処理が未完了、1秒後に再確認.
             Log.d(TAG, "Not completed download yet. Wait a moment...");
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    checkImageAvailableFromDownloadManager(mShowIndex);
-                }
-            }, 1000);
+            mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(mShowIndex), 1000);
         }
     }
 
@@ -314,21 +295,12 @@ public class SlideShowActivity extends AppCompatActivity
             Log.d(TAG, "Show image.");
             hideProgress();
             showImage(data.getFilePath(getApplicationContext()));
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    checkImageAvailableFromMediaItemList(mShowIndex + 1);
-                }
-            }, 1000 * CHANGE_IMAGE_INTERVAL_SECS);
+            mHandler.postDelayed(() -> checkImageAvailableFromMediaItemList(mShowIndex + 1),
+                    1000 * CHANGE_IMAGE_INTERVAL_SECS);
         } else {
             // ダウンロードに失敗しているので次を確認する.
             Log.d(TAG, "Failed download. Go next image.");
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    checkImageAvailableFromMediaItemList(mShowIndex + 1);
-                }
-            });
+            mHandler.post(() -> checkImageAvailableFromMediaItemList(mShowIndex + 1));
         }
     }
 

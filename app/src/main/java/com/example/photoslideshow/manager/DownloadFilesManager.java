@@ -147,27 +147,24 @@ public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
      * ファイルダウンロードのメイン処理. 非同期処理で行う.
      */
     private void runDownloadFiles() {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                if (!hasDownloadOccasion()) {
-                    Log.d(TAG, "Finished to download all files.");
-                    completedDownloadOccasion();
-                    return;
-                }
+        mHandler.post(() -> {
+            if (!hasDownloadOccasion()) {
+                Log.d(TAG, "Finished to download all files.");
+                completedDownloadOccasion();
+                return;
+            }
 
-                try {
-                    MediaItemData data = mMediaItemList.get(mIndex);
-                    DownloadFileAsyncTask.start(
-                            data.getDownloadUrl(500, 1000),
-                            FileUtils.getFilePath(mContext, data.getFileName(), data.getMediaType()),
-                            DownloadFilesManager.this);
-                } catch (MalformedURLException e) {
-                    e.printStackTrace();
-                    addIgnoredIndexes();
-                    incrementIndex();
-                    runDownloadFiles();
-                }
+            try {
+                MediaItemData data = mMediaItemList.get(mIndex);
+                DownloadFileAsyncTask.start(
+                        data.getDownloadUrl(500, 1000),
+                        FileUtils.getFilePath(mContext, data.getFileName(), data.getMediaType()),
+                        DownloadFilesManager.this);
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                addIgnoredIndexes();
+                incrementIndex();
+                runDownloadFiles();
             }
         });
     }

@@ -49,12 +49,7 @@ public class MainActivity extends AppCompatActivity
         TextView versionView = findViewById(R.id.version_text_view);
         versionView.setText(getString(R.string.app_version, BuildConfig.VERSION_NAME));
 
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                givePermissions();
-            }
-        }, 2000);
+        new Handler().postDelayed(() -> givePermissions(), 2000);
     }
 
     @Override

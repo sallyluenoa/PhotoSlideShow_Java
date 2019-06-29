@@ -62,14 +62,11 @@ public class ListDialogFragment extends DialogFragment {
 
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setTitle(title);
-        builder.setItems(array, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                Log.d(TAG, "Select item: " + which);
-                dialog.cancel();
-                if (mListener != null) {
-                    mListener.onItemClick(mId, which);
-                }
+        builder.setItems(array, (dialog, which) -> {
+            Log.d(TAG, "Select item: " + which);
+            dialog.cancel();
+            if (mListener != null) {
+                mListener.onItemClick(mId, which);
             }
         });
         return builder.create();
