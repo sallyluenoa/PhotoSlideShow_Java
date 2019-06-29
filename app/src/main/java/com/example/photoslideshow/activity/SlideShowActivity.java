@@ -68,7 +68,7 @@ public class SlideShowActivity extends AppCompatActivity
         if (PreferenceUtils.isUpdateNeeded(getApplicationContext())) {
             startGetAccessToken();
         } else {
-            startShowLocalMediaItemList();
+            startShowLocalMediaItemList(true);
         }
     }
 
@@ -125,7 +125,7 @@ public class SlideShowActivity extends AppCompatActivity
             startGetSharedAlbumList();
         } else {
             Log.d(TAG, "Failed to get access token.");
-            startShowLocalMediaItemList();
+            startShowLocalMediaItemList(false);
         }
     }
 
@@ -138,7 +138,7 @@ public class SlideShowActivity extends AppCompatActivity
             startGetMediaItemList();
         } else {
             Log.d(TAG, "Failed to get Album list.");
-            startShowLocalMediaItemList();
+            startShowLocalMediaItemList(false);
         }
     }
 
@@ -153,7 +153,7 @@ public class SlideShowActivity extends AppCompatActivity
             startDownloadFiles();
         } else {
             Log.d(TAG, "Failed to update MediaItem list.");
-            startShowLocalMediaItemList();
+            startShowLocalMediaItemList(false);
         }
     }
 
@@ -202,7 +202,7 @@ public class SlideShowActivity extends AppCompatActivity
             }, 1000);
         } else {
             Log.d(TAG, "Failed to start download files manager.");
-            startShowLocalMediaItemList();
+            startShowLocalMediaItemList(false);
         }
     }
 
@@ -245,15 +245,20 @@ public class SlideShowActivity extends AppCompatActivity
         }
     }
 
-    private void startShowLocalMediaItemList() {
+    private void startShowLocalMediaItemList(boolean retry) {
         mMediaItemList = PreferenceUtils.getRandMediaItemList(getApplicationContext());
         int count = mMediaItemList.getDownloadedFilesCount(getApplicationContext());
         if (count >= SHOW_IMAGE_FILES_MIN_COUNT) {
             Log.d(TAG, "Show local image files. Downloaded files count: " + count);
             checkImageAvailableFromMediaItemList(0);
         } else {
-            Log.d(TAG, "There are a few image files. Downloaded files count: " + count);
-            showFailedDialog();
+            if (retry) {
+                Log.d(TAG, "There are a few image files. Try to get files from Server.");
+                startGetAccessToken();
+            } else {
+                Log.d(TAG, "There are a few image files. Show failed dialog.");
+                showFailedDialog();
+            }
         }
     }
 
