@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="max_count_of_showing_image">
+        <item>@string/str_num_ten</item>
+        <item>@string/str_num_twenty</item>
+        <item>@string/str_num_thirty</item>
+        <item>@string/str_num_fifty</item>
+    </string-array>
+
+    <string-array name="time_interval_of_showing_image">
+        <item>@string/str_num_three</item>
+        <item>@string/str_num_five</item>
+        <item>@string/str_num_ten</item>
+        <item>@string/str_num_fifteen</item>
+    </string-array>
+
+</resources>

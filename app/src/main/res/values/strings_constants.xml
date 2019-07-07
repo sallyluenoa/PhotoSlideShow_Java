@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dir_name" translatable="false">PhotoSlideShow</string>
+    <string name="app_version" translatable="false">v%1$s</string>
+
+    <string name="pref_key_user_account" translatable="false">user_account</string>
+    <string name="pref_key_email_address" translatable="false">email_address</string>
+    <string name="pref_key_max_count_list" translatable="false">max_count_list</string>
+    <string name="pref_key_time_interval_list" translatable="false">time_interval_list</string>
+
+    <string name="str_num_three" translatable="false">3</string>
+    <string name="str_num_five" translatable="false">5</string>
+    <string name="str_num_ten" translatable="false">10</string>
+    <string name="str_num_fifteen" translatable="false">15</string>
+    <string name="str_num_twenty" translatable="false">20</string>
+    <string name="str_num_thirty" translatable="false">30</string>
+    <string name="str_num_fifty" translatable="false">50</string>
+
+
+
+</resources>

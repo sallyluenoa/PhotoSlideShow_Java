@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/account_info">
+
+        <Preference
+            android:key="@string/pref_key_user_account"
+            android:title="@string/user_account"
+            android:summary="summary"
+            />
+
+        <Preference
+            android:key="@string/pref_key_email_address"
+            android:title="@string/email_address"
+            android:summary="summary"
+            />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/settings">
+
+        <ListPreference
+            android:key="@string/pref_key_max_count_list"
+            android:title="@string/max_count_of_showing_image"
+            android:entries="@array/max_count_of_showing_image"
+            android:entryValues="@array/max_count_of_showing_image"
+            android:defaultValue="@string/str_num_thirty"
+            />
+
+        <ListPreference
+            android:key="@string/pref_key_time_interval_list"
+            android:title="@string/time_interval_of_showing_image"
+            android:entries="@array/time_interval_of_showing_image"
+            android:entryValues="@array/time_interval_of_showing_image"
+            android:defaultValue="@string/str_num_ten"
+            />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -101,8 +101,9 @@ public class SlideShowActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.action_settings:
-                Log.d(TAG, "Action Setting!");
+            case R.id.action_menu:
+                Log.d(TAG, "Action Menu!");
+                startActivity(new Intent(this, MenuActivity.class));
                 return true;
             case R.id.action_sign_out:
                 Log.d(TAG, "Action Sign Out!");
