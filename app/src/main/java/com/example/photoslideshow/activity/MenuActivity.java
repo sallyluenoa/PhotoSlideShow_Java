@@ -1,6 +1,7 @@
 package com.example.photoslideshow.activity;
 
 import android.os.Bundle;
+import android.view.MenuItem;
 
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.MenuPreferenceFragment;
@@ -17,6 +18,7 @@ public class MenuActivity extends AppCompatActivity {
         setContentView(R.layout.activity_menu);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
@@ -24,5 +26,17 @@ public class MenuActivity extends AppCompatActivity {
                     .replace(R.id.fragment_layout, MenuPreferenceFragment.newInstance())
                     .commit();
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }
