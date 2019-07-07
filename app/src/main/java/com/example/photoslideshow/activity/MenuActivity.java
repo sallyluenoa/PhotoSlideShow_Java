@@ -1,11 +1,12 @@
 package com.example.photoslideshow.activity;
 
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.MenuPreferenceFragment;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 public class MenuActivity extends AppCompatActivity {
 

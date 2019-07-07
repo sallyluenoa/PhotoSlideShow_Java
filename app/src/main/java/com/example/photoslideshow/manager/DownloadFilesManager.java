@@ -2,7 +2,6 @@ package com.example.photoslideshow.manager;
 
 import android.content.Context;
 import android.os.Handler;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import com.example.photoslideshow.list.MediaItemList;
@@ -14,6 +13,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import androidx.annotation.NonNull;
 
 public class DownloadFilesManager implements DownloadFileAsyncTask.ICallback {
 

@@ -1,7 +1,6 @@
 package com.example.photoslideshow.serialize;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import com.example.photoslideshow.utils.BitmapUtils;
 import com.example.photoslideshow.utils.FileUtils;
@@ -11,6 +10,8 @@ import com.google.protobuf.Timestamp;
 
 import java.io.File;
 import java.io.Serializable;
+
+import androidx.annotation.NonNull;
 
 public class MediaItemData implements Serializable {
 

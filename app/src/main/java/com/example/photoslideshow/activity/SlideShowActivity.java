@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +25,9 @@ import com.example.photoslideshow.task.GetSharedAlbumListAsyncTask;
 import com.example.photoslideshow.utils.BitmapUtils;
 import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 public class SlideShowActivity extends AppCompatActivity
     implements AlertDialogFragment.OnClickListener, ListDialogFragment.OnClickListener,
