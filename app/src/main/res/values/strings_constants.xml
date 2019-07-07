@@ -3,7 +3,7 @@
     <string name="dir_name" translatable="false">PhotoSlideShow</string>
     <string name="app_version" translatable="false">v%1$s</string>
 
-    <string name="pref_key_user_account" translatable="false">user_account</string>
+    <string name="pref_key_account_name" translatable="false">user_account</string>
     <string name="pref_key_email_address" translatable="false">email_address</string>
     <string name="pref_key_max_count_list" translatable="false">max_count_list</string>
     <string name="pref_key_time_interval_list" translatable="false">time_interval_list</string>

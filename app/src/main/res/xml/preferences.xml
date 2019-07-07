@@ -5,15 +5,17 @@
     <PreferenceCategory android:title="@string/account_info">
 
         <Preference
-            android:key="@string/pref_key_user_account"
-            android:title="@string/user_account"
-            android:summary="summary"
+            android:key="@string/pref_key_account_name"
+            android:title="@string/account_name"
+            android:summary="@string/account_name"
+            android:selectable="false"
             />
 
         <Preference
             android:key="@string/pref_key_email_address"
             android:title="@string/email_address"
-            android:summary="summary"
+            android:summary="@string/email_address"
+            android:selectable="false"
             />
 
     </PreferenceCategory>
@@ -23,6 +25,7 @@
         <ListPreference
             android:key="@string/pref_key_max_count_list"
             android:title="@string/max_count_of_showing_image"
+            android:summary="@string/str_num_thirty"
             android:entries="@array/max_count_of_showing_image"
             android:entryValues="@array/max_count_of_showing_image"
             android:defaultValue="@string/str_num_thirty"
@@ -31,6 +34,7 @@
         <ListPreference
             android:key="@string/pref_key_time_interval_list"
             android:title="@string/time_interval_of_showing_image"
+            android:summary="@string/str_num_ten"
             android:entries="@array/time_interval_of_showing_image"
             android:entryValues="@array/time_interval_of_showing_image"
             android:defaultValue="@string/str_num_ten"
