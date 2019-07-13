@@ -1,6 +1,7 @@
 package com.example.photoslideshow.activity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,6 +29,7 @@ import com.example.photoslideshow.utils.PreferenceUtils;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.preference.PreferenceManager;
 
 public class SlideShowActivity extends AppCompatActivity
     implements AlertDialogFragment.OnClickListener, ListDialogFragment.OnClickListener,
@@ -40,9 +42,6 @@ public class SlideShowActivity extends AppCompatActivity
     private static final int DLG_ID_FAILED_SHOW_IMAGE = 0;
     private static final int DLG_ID_SELECT_ALBUM = 1;
 
-    private static final int CHANGE_IMAGE_INTERVAL_SECS = 10;
-    private static final int SHOW_IMAGE_FILES_MAX_COUNT = 30;
-    private static final int SHOW_IMAGE_FILES_MIN_COUNT = 5;
     private static final int EXPIRED_TIME_HOURS = 24;
 
     private final Handler mHandler = new Handler();
@@ -72,8 +71,8 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
+    protected void onResume() {
+        super.onResume();
 
         mIsActivityForeground = true;
         if (!mIsGettingProcess) {
@@ -169,7 +168,7 @@ public class SlideShowActivity extends AppCompatActivity
         if (list != null) {
             Log.d(TAG, "Succeeded to update MediaItem list.");
             PreferenceUtils.putAllMediaItemList(getApplicationContext(), list);
-            mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, SHOW_IMAGE_FILES_MAX_COUNT);
+            mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, getMaxCountOfShowingImages());
             PreferenceUtils.updateExpiredTime(getApplicationContext(), EXPIRED_TIME_HOURS);
             PreferenceUtils.putRandMediaItemList(getApplicationContext(), mMediaItemList);
             startDownloadFiles();
@@ -177,6 +176,22 @@ public class SlideShowActivity extends AppCompatActivity
             Log.d(TAG, "Failed to update MediaItem list.");
             startShowLocalMediaItemList(false);
         }
+    }
+
+    private int getTimeIntervalSec() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String numStr = pref.getString(getString(R.string.pref_key_time_interval_list), getString(R.string.str_num_ten));
+        return Integer.parseInt(numStr);
+    }
+
+    private int getMaxCountOfShowingImages() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String numStr = pref.getString(getString(R.string.pref_key_max_count_list), getString(R.string.str_num_thirty));
+        return Integer.parseInt(numStr);
+    }
+
+    private int getMinCountOfShowingImages() {
+        return Integer.parseInt(getString(R.string.str_num_five));
     }
 
     private void startGetAccessToken() {
@@ -222,7 +237,7 @@ public class SlideShowActivity extends AppCompatActivity
             if (mIsActivityForeground) {
                 // 1秒後に表示開始.
                 Log.d(TAG, "Show downloaded image files 1 sec later.");
-                mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(0), 1000);
+                mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(0, getTimeIntervalSec()), 1000);
             } else {
                 Log.d(TAG, "Activity is background.");
             }
@@ -232,28 +247,28 @@ public class SlideShowActivity extends AppCompatActivity
         }
     }
 
-    private void checkImageAvailableFromDownloadManager(int index) {
+    private void checkImageAvailableFromDownloadManager(int index, final int timeIntervalSec) {
         mShowIndex = (index < mDownloadFilesManager.getFileCount() ? index : 0);
         Log.d(TAG, "Try to show index: " + mShowIndex);
 
         if (mShowIndex < mDownloadFilesManager.getDownloadedFileCount()) {
             // ダウンロード処理が完了している.
             if (mDownloadFilesManager.isDownloadedIndex(mShowIndex)) {
-                // ダウンロード済、表示して次の表示は10秒後に設定.
+                // ダウンロード済. 指定された時間後まで画像を表示する.
+                Log.d(TAG, String.format("Show image. Next image is shown %d secs later.", timeIntervalSec));
                 hideProgress();
-                Log.d(TAG, "Show image.");
                 showImage(mDownloadFilesManager.getFilePath(mShowIndex));
-                mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(mShowIndex + 1),
-                        1000 * CHANGE_IMAGE_INTERVAL_SECS);
+                mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(mShowIndex + 1, timeIntervalSec),
+                        1000 * timeIntervalSec);
             } else {
                 // ダウンロードに失敗しているので次を確認する.
                 Log.d(TAG, "Failed download. Go next image.");
-                mHandler.post(() -> checkImageAvailableFromDownloadManager(mShowIndex + 1));
+                mHandler.post(() -> checkImageAvailableFromDownloadManager(mShowIndex + 1, timeIntervalSec));
             }
         } else {
             // ダウンロード処理が未完了、1秒後に再確認.
             Log.d(TAG, "Not completed download yet. Wait a moment...");
-            mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(mShowIndex), 1000);
+            mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(mShowIndex, timeIntervalSec), 1000);
         }
     }
 
@@ -273,9 +288,9 @@ public class SlideShowActivity extends AppCompatActivity
         }
 
         int count = mMediaItemList.getDownloadedFilesCount(getApplicationContext());
-        if (count >= SHOW_IMAGE_FILES_MIN_COUNT) {
+        if (count >= getMinCountOfShowingImages()) {
             Log.d(TAG, "Show local image files. Downloaded files count: " + count);
-            checkImageAvailableFromMediaItemList(mShowIndex);
+            checkImageAvailableFromMediaItemList(mShowIndex, getTimeIntervalSec());
         } else {
             if (retry) {
                 Log.d(TAG, "There are a few image files. Try to get files from Server.");
@@ -287,22 +302,22 @@ public class SlideShowActivity extends AppCompatActivity
         }
     }
 
-    private void checkImageAvailableFromMediaItemList(int index) {
+    private void checkImageAvailableFromMediaItemList(int index, final int timeIntervalSec) {
         mShowIndex = (index < mMediaItemList.size() ? index : 0);
         Log.d(TAG, "Try to show index: " + mShowIndex);
 
         MediaItemData data = mMediaItemList.get(mShowIndex);
         if (data.isDownloadedFile(getApplicationContext())) {
-            // ダウンロード済、表示して次の表示は10秒後に設定.
-            Log.d(TAG, "Show image.");
+            // ダウンロード済. 指定された時間後まで画像を表示する.
+            Log.d(TAG, String.format("Show image. Next image is shown %d secs later.", timeIntervalSec));
             hideProgress();
             showImage(data.getFilePath(getApplicationContext()));
-            mHandler.postDelayed(() -> checkImageAvailableFromMediaItemList(mShowIndex + 1),
-                    1000 * CHANGE_IMAGE_INTERVAL_SECS);
+            mHandler.postDelayed(() -> checkImageAvailableFromMediaItemList(mShowIndex + 1, timeIntervalSec),
+                    1000 * timeIntervalSec);
         } else {
             // ダウンロードに失敗しているので次を確認する.
             Log.d(TAG, "Failed download. Go next image.");
-            mHandler.post(() -> checkImageAvailableFromMediaItemList(mShowIndex + 1));
+            mHandler.post(() -> checkImageAvailableFromMediaItemList(mShowIndex + 1, timeIntervalSec));
         }
     }
 
