@@ -1,5 +1,7 @@
 package com.example.photoslideshow.fragment;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.example.photoslideshow.R;
@@ -7,10 +9,12 @@ import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 public class MenuPreferenceFragment extends PreferenceFragmentCompat {
 
@@ -26,6 +30,18 @@ public class MenuPreferenceFragment extends PreferenceFragmentCompat {
             fragment.setArguments(args);
         }
         return fragment;
+    }
+
+    public static int getMaxCountOfShowingImages(@NonNull Context context) {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        String numStr = pref.getString(context.getString(R.string.pref_key_max_count_list), context.getString(R.string.str_num_thirty));
+        return Integer.parseInt(numStr);
+    }
+
+    public static int getTimeIntervalSec(@NonNull Context context) {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
+        String numStr = pref.getString(context.getString(R.string.pref_key_time_interval_list), context.getString(R.string.str_num_ten));
+        return Integer.parseInt(numStr);
     }
 
     @Override

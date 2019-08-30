@@ -159,7 +159,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void signIn() {
-        if (PreferenceUtils.hasAccountInfo(getApplicationContext())) {
+        if (GoogleApiUtils.getCurrentSignInAccount(getApplicationContext()) != null) {
             Log.d(TAG, "Already have account info. Skip sign in.");
             Intent slideShowIntent = new Intent(getApplicationContext(), SlideShowActivity.class);
             startActivity(slideShowIntent);

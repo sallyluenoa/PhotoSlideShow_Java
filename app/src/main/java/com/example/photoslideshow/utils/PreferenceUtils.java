@@ -15,8 +15,6 @@ public class PreferenceUtils {
 
     private static final String FILE_NAME = "preference";
 
-    private static final String KEY_ACCOUNT_NAME = "account_name";
-    private static final String KEY_EMAIL = "email";
     private static final String KEY_ALBUM_LIST = "album_list";
     private static final String KEY_ALL_MEDIA_ITEM_LIST = "all_media_item_list";
     private static final String KEY_RAND_MEDIA_ITEM_LIST = "rand_media_item_list";
@@ -25,32 +23,10 @@ public class PreferenceUtils {
 
     public static void deleteAll(Context context) {
         SharedPreferences.Editor editor = getPreferencesEditor(context);
-        editor.remove(KEY_ACCOUNT_NAME);
-        editor.remove(KEY_EMAIL);
         editor.remove(KEY_ALBUM_LIST);
         editor.remove(KEY_ALL_MEDIA_ITEM_LIST);
         editor.remove(KEY_RAND_MEDIA_ITEM_LIST);
         editor.commit();
-    }
-
-    public static void putAccountInfo(Context context, String accountName, String email) {
-        SharedPreferences.Editor editor = getPreferencesEditor(context);
-        editor.putString(KEY_ACCOUNT_NAME, accountName);
-        editor.putString(KEY_EMAIL, email);
-        editor.commit();
-    }
-
-    public static boolean hasAccountInfo(Context context) {
-        SharedPreferences pref = getPreferences(context);
-        return (pref.contains(KEY_ACCOUNT_NAME) && pref.contains(KEY_EMAIL));
-    }
-
-    public static String getAccountName(Context context) {
-        return getPreferences(context).getString(KEY_ACCOUNT_NAME, null);
-    }
-
-    public static String getEmail(Context context) {
-        return getPreferences(context).getString(KEY_EMAIL, null);
     }
 
     public static void updateExpiredTime(Context context, long hours) {

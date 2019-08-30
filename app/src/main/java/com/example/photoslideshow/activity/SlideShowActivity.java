@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.AlertDialogFragment;
 import com.example.photoslideshow.fragment.ListDialogFragment;
+import com.example.photoslideshow.fragment.MenuPreferenceFragment;
 import com.example.photoslideshow.list.AlbumList;
 import com.example.photoslideshow.list.MediaItemList;
 import com.example.photoslideshow.manager.DownloadFilesManager;
@@ -166,7 +167,8 @@ public class SlideShowActivity extends AppCompatActivity
         if (list != null) {
             Log.d(TAG, "Succeeded to update MediaItem list.");
             PreferenceUtils.putAllMediaItemList(getApplicationContext(), list);
-            mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO, getMaxCountOfShowingImages());
+            mMediaItemList = list.makeRandMediaItemList(MediaItemData.MediaType.PHOTO,
+                    MenuPreferenceFragment.getMaxCountOfShowingImages(getApplicationContext()));
             PreferenceUtils.updateExpiredTime(getApplicationContext(), EXPIRED_TIME_HOURS);
             PreferenceUtils.putRandMediaItemList(getApplicationContext(), mMediaItemList);
             startDownloadFiles();
@@ -174,22 +176,6 @@ public class SlideShowActivity extends AppCompatActivity
             Log.d(TAG, "Failed to update MediaItem list.");
             startShowLocalMediaItemList(false);
         }
-    }
-
-    private int getTimeIntervalSec() {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String numStr = pref.getString(getString(R.string.pref_key_time_interval_list), getString(R.string.str_num_ten));
-        return Integer.parseInt(numStr);
-    }
-
-    private int getMaxCountOfShowingImages() {
-        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String numStr = pref.getString(getString(R.string.pref_key_max_count_list), getString(R.string.str_num_thirty));
-        return Integer.parseInt(numStr);
-    }
-
-    private int getMinCountOfShowingImages() {
-        return Integer.parseInt(getString(R.string.str_num_five));
     }
 
     private void startGetAccessToken() {
@@ -228,7 +214,8 @@ public class SlideShowActivity extends AppCompatActivity
             if (mIsActivityForeground) {
                 // 1秒後に表示開始.
                 Log.d(TAG, "Show downloaded image files 1 sec later.");
-                mHandler.postDelayed(() -> checkImageAvailableFromDownloadManager(0, getTimeIntervalSec()), 1000);
+                mHandler.postDelayed(() ->
+                        checkImageAvailableFromDownloadManager(0, MenuPreferenceFragment.getTimeIntervalSec(getApplicationContext())), 1000);
             } else {
                 Log.d(TAG, "Activity is background.");
             }
@@ -279,9 +266,9 @@ public class SlideShowActivity extends AppCompatActivity
         }
 
         int count = mMediaItemList.getDownloadedFilesCount(getApplicationContext());
-        if (count >= getMinCountOfShowingImages()) {
+        if (count >= 2) {
             Log.d(TAG, "Show local image files. Downloaded files count: " + count);
-            checkImageAvailableFromMediaItemList(mShowIndex, getTimeIntervalSec());
+            checkImageAvailableFromMediaItemList(mShowIndex, MenuPreferenceFragment.getTimeIntervalSec(getApplicationContext()));
         } else {
             if (retry) {
                 Log.d(TAG, "There are a few image files. Try to get files from Server.");
