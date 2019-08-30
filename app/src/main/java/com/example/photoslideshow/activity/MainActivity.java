@@ -15,7 +15,6 @@ import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.ConfirmDialogFragment;
 import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 
@@ -60,15 +59,9 @@ public class MainActivity extends AppCompatActivity
 
         switch (requestCode) {
             case ACV_REQ_CODE_SIGN_IN:
-                GoogleSignInAccount signInAccount = GoogleApiUtils.getSignInAccountFromResultIntent(data);
-                if (signInAccount != null) {
+                if (GoogleApiUtils.getSignInAccountFromResultIntent(data) != null) {
                     Log.d(TAG, "SignIn succeeded.");
-                    String accountName = signInAccount.getDisplayName();
-                    String email = signInAccount.getEmail();
-                    PreferenceUtils.putAccountInfo(getApplicationContext(), accountName, email);
-                    Intent slideShowIntent = new Intent(getApplicationContext(), SlideShowActivity.class);
-                    slideShowIntent.putExtra(SlideShowActivity.KEY_EMAIL, email);
-                    startActivity(slideShowIntent);
+                    startActivity(new Intent(getApplicationContext(), SlideShowActivity.class));
                     finish();
                 } else {
                     Log.d(TAG, "SignIn failed.");

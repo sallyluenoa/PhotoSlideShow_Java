@@ -3,7 +3,9 @@ package com.example.photoslideshow.fragment;
 import android.os.Bundle;
 
 import com.example.photoslideshow.R;
+import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 
 import androidx.annotation.Nullable;
 import androidx.preference.ListPreference;
@@ -30,11 +32,13 @@ public class MenuPreferenceFragment extends PreferenceFragmentCompat {
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         setPreferencesFromResource(R.xml.preferences, rootKey);
 
+        GoogleSignInAccount account = GoogleApiUtils.getCurrentSignInAccount(getContext());
+
         Preference accountPref = findPreference(getString(R.string.pref_key_account_name));
-        accountPref.setSummary(PreferenceUtils.getAccountName(getContext()));
+        accountPref.setSummary(account.getDisplayName());
 
         Preference emailPref = findPreference(getString(R.string.pref_key_email_address));
-        emailPref.setSummary(PreferenceUtils.getEmail(getContext()));
+        emailPref.setSummary(account.getEmail());
 
         ListPreference maxCountPref = (ListPreference) findPreference(getString(R.string.pref_key_max_count_list));
         maxCountPref.setSummary(maxCountPref.getValue());

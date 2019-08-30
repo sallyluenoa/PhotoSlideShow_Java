@@ -1,8 +1,10 @@
 package com.example.photoslideshow.utils;
 
+import android.content.Context;
 import android.content.Intent;
 
 import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
@@ -18,6 +20,7 @@ import com.google.photos.library.v1.PhotosLibrarySettings;
 import java.io.IOException;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 
 public class GoogleApiUtils {
@@ -76,10 +79,14 @@ public class GoogleApiUtils {
         activity.startActivityForResult(signInIntent, requestCode);
     }
 
-    public static GoogleSignInAccount getSignInAccountFromResultIntent(Intent intent) {
+    public static GoogleSignInAccount getSignInAccountFromResultIntent(@Nullable Intent intent) {
         if (intent == null) return null;
 
         GoogleSignInResult result = Auth.GoogleSignInApi.getSignInResultFromIntent(intent);
         return (result.isSuccess() ? result.getSignInAccount() : null);
+    }
+
+    public static GoogleSignInAccount getCurrentSignInAccount(@NonNull Context context) {
+        return GoogleSignIn.getLastSignedInAccount(context);
     }
 }

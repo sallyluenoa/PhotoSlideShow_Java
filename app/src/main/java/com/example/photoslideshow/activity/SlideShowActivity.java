@@ -37,8 +37,6 @@ public class SlideShowActivity extends AppCompatActivity
 
     private static final String TAG = SlideShowActivity.class.getSimpleName();
 
-    public static final String KEY_EMAIL = "email";
-
     private static final int DLG_ID_FAILED_SHOW_IMAGE = 0;
     private static final int DLG_ID_SELECT_ALBUM = 1;
 
@@ -195,16 +193,9 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     private void startGetAccessToken() {
-        String email = null;
-        Intent intent = getIntent();
-        if (intent != null) {
-            email = intent.getStringExtra(KEY_EMAIL);
-        }
-        if (email == null) {
-            email = PreferenceUtils.getEmail(getApplicationContext());
-        }
         mIsGettingProcess = true;
         showProgress(R.string.getting_access_token_from_google_api);
+        String email = GoogleApiUtils.getCurrentSignInAccount(getApplicationContext()).getEmail();
         GetAccessTokenAsyncTask.start(getApplicationContext(), email, GoogleApiUtils.SCOPE_PHOTO_READONLY, this);
     }
 
