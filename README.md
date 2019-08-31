@@ -17,10 +17,22 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
 1. サインインしてしばらくすると、フォトの共有内にあるアルバムの一覧が表示されます。アプリでスライドショーしたいアルバムを選択してください。
 1. しばらくして読み込み完了すると画像が表示されます。共有アルバム内の画像が多いと読み込みに時間がかかります。（要改善＆技術検討）
 
+## Library mainly used
+- Google Sign-in API
+  - Googleアカウントサインインに OAuth 2.0 を利用
+  - アカウント情報や後述のフォトライブラリで使うトークンを取得する
+  - https://developers.google.com/identity/sign-in/android/
+- Google Photo API
+  - Googleフォトからアルバムや画像の取得を取得する
+  - https://developers.google.com/photos/
+  - https://google.github.io/java-photoslibrary/1.3.0/
+
 ## Todo list for developer
 
 ### 直近で入れたい機能
 - サインアウト
+- ライセンス情報
+- Boltsフレームワークの導入
 - アニメーション
 - 読み込み中の体裁
 - 読み込みの高速化（BaseUrl更新）
