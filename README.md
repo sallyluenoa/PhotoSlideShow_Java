@@ -15,7 +15,7 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
 1. アプリを初回起動するとスプラッシュ後にパーミッション許可の確認画面が表示されるので許可してください。（Android 6 未満はパーミッション許可がでません。）
 1. Googleアカウントサインイン画面がでるので、サインインしてください。（大抵は端末でサインインしているGoogleアカウントに選択することになると思います。）
 1. サインインしてしばらくすると、フォトの共有内にあるアルバムの一覧が表示されます。アプリでスライドショーしたいアルバムを選択してください。
-1. しばらくして読み込み完了すると画像が表示されます。共有アルバム内の画像が多いと読み込みに時間がかかります。（要改善＆技術検討）
+1. しばらくして読み込み完了すると画像が表示されます。
 
 ## Library mainly used
 - Google Sign-in API
@@ -30,14 +30,26 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
   - 使用しているオープンソースライブラリのライセンス表示のため使用
   - https://developers.google.com/android/reference/com/google/android/gms/oss/licenses/package-summary
   - https://github.com/google/play-services-plugins/tree/master/oss-licenses-plugin
+  - このライブラリを適用すると GradleSync時にWarningが出る。ライブラリ修正され次第アップデートする
+    - https://github.com/google/play-services-plugins/issues/57
 
 ## Todo list for developer
 
+### 課題
+- 共有アルバム内の画像が多いと読み込みに時間がかかる、もうちょっとはやくできないものか？（ライブラリとの兼ね合い、技術検討）
+- アルバムの選択がサインイン直後のみ、サインインしたまま選択できるようにしたい（設計の見直し）
+- 「共有」内のアルバムのみ選択可、他も選択できるようにしたい（ライブラリとの兼ね合い、技術検討）
+- 動画を流すことはできないか？（技術検討）
+- 時間系列直近の100の中からピックアップしているが、古い画像もある程度ピックアップできないか？（アルゴリズム検討）
+  - 時間系列が新しいものほど表示割合が多く、古いものほど割合を低くしたい
+  - Ex. １ヶ月以内の写真：半年以内の写真：それ以前の写真 ＝ 5:3:2
+- アプリアイコンどうにかしたい、、、
+
 ### 直近で入れたい機能
+- パッケージ名の変更
 - Boltsフレームワークの導入
 - アニメーション
 - 読み込み中の体裁
-- 読み込みの高速化（BaseUrl更新）
 - ライブラリのアップデート
 
 ### 後回し機能
@@ -51,9 +63,3 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
 - パッケージ分け(Release, debug)
 - DialogFragmentの改善
 - config password in gradlew assembleRelease (build.gradle)
-
-### その他メモ
-- ライセンス情報
-  - oss-licensesを適用するとGradleSync時にWarningが出る
-  - まだ修正されていないようなので、修正され次第ライブラリアップデートする
-  - https://github.com/google/play-services-plugins/issues/57
