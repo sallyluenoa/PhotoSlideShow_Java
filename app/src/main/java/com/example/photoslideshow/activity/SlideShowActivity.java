@@ -1,7 +1,6 @@
 package com.example.photoslideshow.activity;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
@@ -31,12 +30,12 @@ import com.example.photoslideshow.utils.PreferenceUtils;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.oss.licenses.OssLicensesMenuActivity;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.preference.PreferenceManager;
 
 public class SlideShowActivity extends AppCompatActivity
     implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
@@ -132,6 +131,11 @@ public class SlideShowActivity extends AppCompatActivity
             case R.id.action_menu:
                 Log.d(TAG, "Action Menu!");
                 startActivity(new Intent(this, MenuActivity.class));
+                return true;
+            case R.id.action_license:
+                Log.d(TAG, "Action License!");
+                startActivity(new Intent(this, OssLicensesMenuActivity.class)
+                        .putExtra("title", getString(R.string.license_list)));
                 return true;
             case R.id.action_sign_out:
                 Log.d(TAG, "Action Sign Out!");

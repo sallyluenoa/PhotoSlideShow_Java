@@ -12,6 +12,8 @@
     <string name="account_info">アカウント情報</string>
     <string name="menu">メニュー</string>
     <string name="settings">設定</string>
+    <string name="license">ライセンス情報</string>
+    <string name="license_list">ライセンス一覧</string>
     <string name="account_name">アカウント名</string>
     <string name="email_address">メールアドレス</string>
     <string name="max_count_of_showing_image">表示する画像の最大数</string>

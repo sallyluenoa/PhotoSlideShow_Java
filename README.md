@@ -26,15 +26,19 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
   - Googleフォトからアルバムや画像の取得を取得する
   - https://developers.google.com/photos/
   - https://google.github.io/java-photoslibrary/1.3.0/
+- OSS Licenses Gradle Plugin
+  - 使用しているオープンソースライブラリのライセンス表示のため使用
+  - https://developers.google.com/android/reference/com/google/android/gms/oss/licenses/package-summary
+  - https://github.com/google/play-services-plugins/tree/master/oss-licenses-plugin
 
 ## Todo list for developer
 
 ### 直近で入れたい機能
-- ライセンス情報
 - Boltsフレームワークの導入
 - アニメーション
 - 読み込み中の体裁
 - 読み込みの高速化（BaseUrl更新）
+- ライブラリのアップデート
 
 ### 後回し機能
 - アップデート機能
@@ -44,7 +48,12 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
 ### Refactoring
 - Java8 lambda (list filer)
   - https://qiita.com/tasogarei/items/60b5e55d8f42732686c6
-- photo api version update (1.1.0 -> 1.3.0)
 - パッケージ分け(Release, debug)
 - DialogFragmentの改善
 - config password in gradlew assembleRelease (build.gradle)
+
+### その他メモ
+- ライセンス情報
+  - oss-licensesを適用するとGradleSync時にWarningが出る
+  - まだ修正されていないようなので、修正され次第ライブラリアップデートする
+  - https://github.com/google/play-services-plugins/issues/57
