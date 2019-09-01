@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.example.photoslideshow.R;
 import com.example.photoslideshow.fragment.AlertDialogFragment;
+import com.example.photoslideshow.fragment.ConfirmDialogFragment;
 import com.example.photoslideshow.fragment.ListDialogFragment;
 import com.example.photoslideshow.fragment.MenuPreferenceFragment;
 import com.example.photoslideshow.list.AlbumList;
@@ -27,19 +28,26 @@ import com.example.photoslideshow.task.GetSharedAlbumListAsyncTask;
 import com.example.photoslideshow.utils.BitmapUtils;
 import com.example.photoslideshow.utils.GoogleApiUtils;
 import com.example.photoslideshow.utils.PreferenceUtils;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.preference.PreferenceManager;
 
 public class SlideShowActivity extends AppCompatActivity
-    implements AlertDialogFragment.OnClickListener, ListDialogFragment.OnClickListener,
+    implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        AlertDialogFragment.OnClickListener, ConfirmDialogFragment.OnClickListener, ListDialogFragment.OnClickListener,
         GetAccessTokenAsyncTask.ICallback, GetSharedAlbumListAsyncTask.ICallback, GetMediaItemListAsyncTask.ICallback {
 
     private static final String TAG = SlideShowActivity.class.getSimpleName();
 
     private static final int DLG_ID_FAILED_SHOW_IMAGE = 0;
     private static final int DLG_ID_SELECT_ALBUM = 1;
+    private static final int DLG_ID_CONFIRM_SIGN_OUT = 2;
 
     private static final int EXPIRED_TIME_HOURS = 24;
 
@@ -57,6 +65,9 @@ public class SlideShowActivity extends AppCompatActivity
     private boolean mIsGettingProcess = false;
     private boolean mIsActivityForeground = false;
     private int mShowIndex = 0;
+
+    private GoogleApiClient mGoogleApiClient = null;
+    private boolean mIsRequestedSignOut = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +103,24 @@ public class SlideShowActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+
+        if (mGoogleApiClient != null && !mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.disconnect();
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_slide_show, menu);
         return true;
@@ -106,11 +135,29 @@ public class SlideShowActivity extends AppCompatActivity
                 return true;
             case R.id.action_sign_out:
                 Log.d(TAG, "Action Sign Out!");
+                showConfirmSignOutDialog();
                 return true;
             default:
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle connectionHint) {
+        Log.d(TAG, "onConnected");
+
+        if (mIsRequestedSignOut) signOut();
+    }
+
+    @Override
+    public void onConnectionSuspended(int cause) {
+        Log.d(TAG, "onConnectionSuspended");
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.d(TAG, "onConnectionFailed. errorMessage=" + connectionResult.getErrorMessage());
     }
 
     @Override
@@ -122,6 +169,21 @@ public class SlideShowActivity extends AppCompatActivity
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onPositiveClick(int id) {
+        switch (id) {
+            case DLG_ID_CONFIRM_SIGN_OUT:
+                signOut();
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onNegativeClick(int id) {
     }
 
     @Override
@@ -177,6 +239,28 @@ public class SlideShowActivity extends AppCompatActivity
             startShowLocalMediaItemList(false);
         }
     }
+
+    private void signOut() {
+        if (!isConnectedGoogleApiClient()) {
+            mIsRequestedSignOut = true;
+            return;
+        }
+
+        Auth.GoogleSignInApi.signOut(mGoogleApiClient).setResultCallback(status1 -> {
+            Log.i(TAG, String.format("Signed out. Code: %d, Message: %s",
+                    status1.getStatusCode(), status1.getStatusMessage()));
+
+            Auth.GoogleSignInApi.revokeAccess(mGoogleApiClient).setResultCallback(status2 -> {
+                Log.i(TAG, String.format("Revoked access. Code: %d, Message: %s",
+                        status2.getStatusCode(), status2.getStatusMessage()));
+
+                PreferenceUtils.clear(getApplicationContext());
+                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                finish();
+            });
+        });
+    }
+
 
     private void startGetAccessToken() {
         mIsGettingProcess = true;
@@ -329,6 +413,14 @@ public class SlideShowActivity extends AppCompatActivity
         fragment.show(getSupportFragmentManager(), AlertDialogFragment.TAG);
     }
 
+    private void showConfirmSignOutDialog() {
+        ConfirmDialogFragment fragment = ConfirmDialogFragment.newInstance(DLG_ID_CONFIRM_SIGN_OUT,
+                R.string.confirm_sign_out_dialog_title, R.string.confirm_sign_out_dialog_message,
+                R.string.yes, R.string.no, TAG);
+        fragment.setCancelable(false);
+        fragment.show(getSupportFragmentManager(), ConfirmDialogFragment.TAG);
+    }
+
     private void showProgress(int textId) {
         findViewById(R.id.progress_layout).setVisibility(View.VISIBLE);
         ((TextView) findViewById(R.id.progress_textView)).setText(textId);
@@ -336,6 +428,18 @@ public class SlideShowActivity extends AppCompatActivity
 
     private void hideProgress() {
         findViewById(R.id.progress_layout).setVisibility(View.GONE);
+    }
+
+    private boolean isConnectedGoogleApiClient() {
+        if (mGoogleApiClient == null) {
+            String[] scopes = { GoogleApiUtils.SCOPE_PHOTO_READONLY };
+            mGoogleApiClient = GoogleApiUtils.initSignInApiClient(this, this, this, scopes);
+        }
+        if (!mGoogleApiClient.isConnected()) {
+            mGoogleApiClient.connect();
+            return false;
+        }
+        return true;
     }
 
     private boolean isNullAccessToken() {

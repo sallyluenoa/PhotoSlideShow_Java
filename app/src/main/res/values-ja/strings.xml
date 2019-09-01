@@ -36,6 +36,9 @@
     <string name="failed_show_images_dialog_title">画像の表示に失敗しました。</string>
     <string name="failed_show_images_dialog_message">一度アプリを終了して再度お試しください。</string>
 
+    <string name="confirm_sign_out_dialog_title">サインアウトします。</string>
+    <string name="confirm_sign_out_dialog_message">よろしいですか？</string>
+
     <string name="select_album_dialog_title">アルバムを選択してください。</string>
 
 </resources>

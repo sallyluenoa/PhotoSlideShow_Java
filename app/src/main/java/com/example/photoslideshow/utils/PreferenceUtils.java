@@ -21,12 +21,8 @@ public class PreferenceUtils {
     private static final String KEY_SELECTED_ALBUM_ID = "selected_album_id";
     private static final String KEY_EXPIRED_TIME = "expired_time";
 
-    public static void deleteAll(Context context) {
-        SharedPreferences.Editor editor = getPreferencesEditor(context);
-        editor.remove(KEY_ALBUM_LIST);
-        editor.remove(KEY_ALL_MEDIA_ITEM_LIST);
-        editor.remove(KEY_RAND_MEDIA_ITEM_LIST);
-        editor.commit();
+    public static void clear(Context context) {
+        getPreferencesEditor(context).clear().commit();
     }
 
     public static void updateExpiredTime(Context context, long hours) {

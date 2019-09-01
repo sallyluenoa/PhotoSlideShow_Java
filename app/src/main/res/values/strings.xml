@@ -36,6 +36,9 @@
     <string name="failed_show_images_dialog_title">Failed show images.</string>
     <string name="failed_show_images_dialog_message">Try again after close app.</string>
 
+    <string name="confirm_sign_out_dialog_title">Will be signed out.</string>
+    <string name="confirm_sign_out_dialog_message">Is it OK?</string>
+
     <string name="select_album_dialog_title">Select your album.</string>
 
 </resources>
