@@ -43,6 +43,10 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
 - 時間系列直近の100の中からピックアップしているが、古い画像もある程度ピックアップできないか？（アルゴリズム検討）
   - 時間系列が新しいものほど表示割合が多く、古いものほど割合を低くしたい
   - Ex. １ヶ月以内の写真：半年以内の写真：それ以前の写真 ＝ 5:3:2
+- アプリを終了しなくても画像更新を行うかどうか判定したい（設計の見直し）
+  - アプリ起動時に前の更新から24時間経過したかどうかで画像情報の更新を行うかどうかを決めている
+  - つまり、バックグラウンド⇔フォアグラウンドでアプリを終了しなければ更新処理が走らない
+- 情報更新してからの画像表示とダウンロード済のローカルの画像を表示するメソッドが分かれている、統一したい（設計見直し、アルゴリズム検討）
 - アプリアイコンどうにかしたい、、、
 
 ### 直近で入れたい機能
@@ -58,8 +62,10 @@ Googleフォトで共有したアルバム内の写真をスライドショー�
 - 画面回転考慮（タブレットのみ対応）
 
 ### Refactoring
+- JavaDoc、コメントの追加
 - Java8 lambda (list filer)
-  - https://qiita.com/tasogarei/items/60b5e55d8f42732686c6
 - パッケージ分け(Release, debug)
 - DialogFragmentの改善
-- config password in gradlew assembleRelease (build.gradle)
+- build.gradleの改善
+  - Rename APK in assembleRelease
+  - Confirm key password in gradlew assembleRelease
